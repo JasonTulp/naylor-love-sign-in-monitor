@@ -12,6 +12,7 @@ export default function ViewEvents() {
     const [beforeDate, setBeforeDate] = useState<string>("");
     const [afterDate, setAfterDate] = useState<string>("");
     const [cardNumber, setCardNumber] = useState<string>("");
+    const [turnstile, setTurnstile] = useState<string>("");
     const [name, setName] = useState<string>("");
     const [resetFilters, setResetFilters] = useState(false);
 
@@ -25,6 +26,7 @@ export default function ViewEvents() {
             if (afterDate) queryParams.after = afterDate;
             if (cardNumber) queryParams.cardNumber = cardNumber;
             if (name) queryParams.name = name;
+            if (turnstile) queryParams.turnstile = turnstile;
 
             const response = await fetch(`/api/scan-events?${new URLSearchParams(queryParams)}`);
             const data = await response.json();
@@ -51,6 +53,7 @@ export default function ViewEvents() {
         setAfterDate("");
         setCardNumber("");
         setName("");
+        setTurnstile("");
         setResetFilters(true);
     };
 
@@ -67,11 +70,7 @@ export default function ViewEvents() {
         applyFilters();
     }, [currentPage]);
 
-    // if (loading) {
-    //     return <Spinner />;
-    // }
     let eventData;
-
     if (!loading && events && events.length) {
         eventData = <div className="space-y-2 pt-4 w-full mx-auto">
             {events.map((event, index) => (
@@ -139,36 +138,34 @@ export default function ViewEvents() {
         }
     }
 
-
-
     return (
-        <div className="w-full">
+        <div className="w-full" >
             <div className={"p-2"}>
                 {/* Date Filter Section */}
-                <div className="flex space-x-4 py-2 justify-between">
-                    <div >
+                <div className="grid grid-cols-2 sm:grid-cols-4  gap-x-2 gap-y-1 py-2 w-full">
+                    <div className="flex flex-col col-span-2">
                         <label htmlFor="afterDate" className="block">After</label>
                         <input
-                            type="date"
+                            type="datetime-local"
                             id="afterDate"
                             value={afterDate}
                             onChange={(e) => setAfterDate(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && applyFilters()}
-                            className="px-3 py-1 border rounded-md bg-mid-light h-8"
+                            className="input h-8 w-full"
                         />
                     </div>
-                    <div>
+                    <div className="flex flex-col col-span-2">
                         <label htmlFor="beforeDate" className="block">Before</label>
                         <input
-                            type="date"
+                            type="datetime-local"
                             id="beforeDate"
                             value={beforeDate}
                             onChange={(e) => setBeforeDate(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && applyFilters()}
-                            className="px-3 py-1 border rounded-md bg-mid-light h-8"
+                            className="input h-8 w-full"
                         />
                     </div>
-                    <div>
+                    <div className="flex flex-col col-span-2">
                         <label htmlFor="name" className="block">Name</label>
                         <input
                             type="text"
@@ -176,36 +173,38 @@ export default function ViewEvents() {
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && applyFilters()}
-                            className="px-3 py-1 border rounded-md bg-mid-light h-8"
+                            className="input h-8 w-full"
                             placeholder="Enter Name"
                         />
                     </div>
-                    <div>
-                        <label htmlFor="cardNumber" className="block">Card Number</label>
+                    <div className="flex flex-col">
+                        <label htmlFor="cardNumber" className="block">Card No.</label>
                         <input
                             type="number"
                             id="cardNumber"
                             value={cardNumber}
                             onChange={(e) => setCardNumber(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && applyFilters()}
-                            className="px-3 py-1 border rounded-md bg-mid-light h-8"
+                            className="input h-8 w-full"
                             placeholder="Enter Card No."
                         />
                     </div>
-                    {/*<div>*/}
-                    {/*    <label htmlFor="turnstile" className="block">Turnstile</label>*/}
-                    {/*    <input*/}
-                    {/*        type="number"*/}
-                    {/*        id="turnstile"*/}
-                    {/*        value={cardNumber}*/}
-                    {/*        onChange={(e) => setCardNumber(e.target.value)}*/}
-                    {/*        onKeyDown={(e) => e.key === "Enter" && applyFilters()}*/}
-                    {/*        className="px-3 py-1 border rounded-md bg-mid-light h-8"*/}
-                    {/*        placeholder="Enter Card No."*/}
-                    {/*    />*/}
-                    {/*</div>*/}
+                    <div className="flex flex-col">
+                        <label htmlFor="turnstile" className="block">Turnstile.</label>
+                        <input
+                            type="number"
+                            id="turnstile"
+                            value={turnstile}
+                            onChange={(e) => setTurnstile(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && applyFilters()}
+                            className="input h-8 w-full"
+                            placeholder="Enter Turnstile"
+                        />
+                    </div>
                 </div>
+
                 <div className="flex space-x-4 py-2 justify-end">
+
                     {/* Filter Buttons */}
                     <button
                         onClick={applyFilters}

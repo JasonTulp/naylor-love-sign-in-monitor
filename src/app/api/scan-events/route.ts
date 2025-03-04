@@ -11,6 +11,7 @@ export async function GET(req: NextRequest) {
         const after = searchParams.get('after');
         const cardNumber = searchParams.get('cardNumber');
         const name = searchParams.get("name");
+        const turnstile = searchParams.get("turnstile");
 
         // Calculate the number of items to skip based on the page
         const skip = (page - 1) * limit;
@@ -30,6 +31,10 @@ export async function GET(req: NextRequest) {
         // Apply name search (case-insensitive)
         if (name) {
             query.name = { $regex: name, $options: "i" };
+        }
+        if (turnstile) {
+            // convert to number
+            query.turnstile = parseInt(turnstile);
         }
 
         await dbConnect();

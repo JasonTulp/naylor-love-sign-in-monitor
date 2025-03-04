@@ -43,5 +43,5 @@ code {
 }
 
 .input {
-  @apply rounded-md p-1 shadow-md shadow-dark bg-transparent border border-light;;
+  @apply  shadow-md shadow-dark border-light px-3 py-1 border focus:border-primary focus:outline-none focus:ring-0 rounded-md bg-mid-light;
 }
