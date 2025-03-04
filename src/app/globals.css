@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.App-header {
+  /*background-color: #282c34;*/
+  min-height: 5vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /*padding: 2vh;*/
+}
+
+/* Remove background color on autofill for email input */
+input:-webkit-autofill,
+input:-webkit-autofill:focus {
+  transition: background-color 0s 600000s, color 0s 600000s !important;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+  sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /*color: #ededed;*/
+  /*background: #333344;*/
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+  monospace;
+}
+
+.panel {
+  @apply p-4 bg-mid w-full rounded-md shadow-lg shadow-dark border-2 border-border;
+}
+
+.link {
+  @apply font-bold underline text-link;
+}
+
+.input {
+  @apply rounded-md p-1 shadow-md shadow-dark bg-transparent border border-light;;
+}
