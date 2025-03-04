@@ -10,11 +10,7 @@ const scanEventSchema = new Schema({
         type: Date,
         required: true
     },
-    firstNames: {
-        type: String,
-        required: true
-    },
-    lastName: {
+    name: {
         type: String,
         required: true
     },

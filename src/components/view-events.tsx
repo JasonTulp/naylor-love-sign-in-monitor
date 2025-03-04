@@ -1,56 +1,104 @@
 import {useEffect, useState} from "react";
+import Spinner from "@/components/spinner";
+import HorizontalRule from "@/components/horizontal-rule";
 
 export default function ViewEvents() {
     const [events, setEvents] = useState<any[]>([]);
     const [expandedIndex, setExpandedIndex] = useState(-1);
     const [hoverIndex, setHoverIndex] = useState(-1);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [loading, setLoading] = useState(true);
+    const [beforeDate, setBeforeDate] = useState<string>("");
+    const [afterDate, setAfterDate] = useState<string>("");
+    const [cardNumber, setCardNumber] = useState<string>("");
+    const [name, setName] = useState<string>("");
+    const [resetFilters, setResetFilters] = useState(false);
 
-    useEffect(() => {
-        const fetchEvents = async () => {
-            try {
-                const response = await fetch('/api/scan-events');
-                const data = await response.json();
-                setEvents(data.data);
-            } catch (error) {
-                console.error("Error fetching events:", error);
-            }
-        };
+    const fetchEvents = async (page: number) => {
+        try {
+            const queryParams: any = {
+                page: currentPage,
+                limit: 25,
+            };
+            if (beforeDate) queryParams.before = beforeDate;
+            if (afterDate) queryParams.after = afterDate;
+            if (cardNumber) queryParams.cardNumber = cardNumber;
+            if (name) queryParams.name = name;
 
-        fetchEvents();
-    }, []); // Empty dependency array to run only once after mount
+            const response = await fetch(`/api/scan-events?${new URLSearchParams(queryParams)}`);
+            const data = await response.json();
+            setEvents(data.data);
+            setTotalPages(data.totalPages);
+        } catch (error) {
+            console.error("Error fetching events:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    if (!events || !events.length || !events[0].time) {
-        return (
-            <h2>No event data available</h2>
+    const applyFilters = () => {
+        setLoading(true);
+        setExpandedIndex(-1);
+        setCurrentPage(1);
+        fetchEvents(currentPage).then(() =>
+            setLoading(false)
         );
-    }
+    };
 
-    const eventData = <div className="space-y-2 pt-4 w-full mx-auto">
-        {events.map((event, index) => (
-            <div
-                key={index}
-                className={`relative bg-mid-light  pt-8 pb-10 rounded-md shadow-md shadow-dark cursor-pointer transition-all duration-300
+    const clearFilters = () => {
+        setBeforeDate("");
+        setAfterDate("");
+        setCardNumber("");
+        setName("");
+        setResetFilters(true);
+    };
+
+// Run applyFilters *only* after state updates
+    useEffect(() => {
+        if (resetFilters) {
+            applyFilters();
+            setResetFilters(false);
+        }
+    }, [resetFilters]);
+
+    // Use effect is called when the component is mounted
+    useEffect(() => {
+        applyFilters();
+    }, [currentPage]);
+
+    if (loading) {
+        return <Spinner />;
+    }
+    let eventData;
+
+    if (events && events.length) {
+        eventData = <div className="space-y-2 pt-4 w-full mx-auto">
+            {events.map((event, index) => (
+                <div
+                    key={index}
+                    className={`relative bg-mid-light  pt-8 pb-10 rounded-md shadow-md shadow-dark cursor-pointer transition-all duration-300
                     ${expandedIndex === index ? 'ring-2 ring-primary' : ''}
                     ${hoverIndex === index && expandedIndex !== index ? 'ring-1 ring-light-as' : ''}
                 `}
-                onClick={() =>
-                    setExpandedIndex(expandedIndex === index ? -1 : index)
-                }
-                onMouseEnter={() => setHoverIndex(index)}
-                onMouseLeave={() => setHoverIndex(-1)}
-            >
-                {/* Top Left: Name */}
-                <span className="absolute top-2 left-5 text-xl font-bold capitalize">
-                    {event.firstNames + " " + event.lastName}
+                    onClick={() =>
+                        setExpandedIndex(expandedIndex === index ? -1 : index)
+                    }
+                    onMouseEnter={() => setHoverIndex(index)}
+                    onMouseLeave={() => setHoverIndex(-1)}
+                >
+                    {/* Top Left: Name */}
+                    <span className="absolute top-2 left-5 text-xl font-bold capitalize">
+                    {event.name}
                 </span>
 
-                {/* Top Right: cardNumber */}
-                <span className={`absolute top-2 right-5 text-2xl font-bold`}>
+                    {/* Top Right: cardNumber */}
+                    <span className={`absolute top-2 right-5 text-2xl font-bold`}>
                     {event.cardNumber}
                 </span>
 
-                {/* Bottom Left: Time/ Date */}
-                <span className="absolute bottom-2 left-5 text-md text-primary">
+                    {/* Bottom Left: Time/ Date */}
+                    <span className="absolute bottom-2 left-5 text-md text-primary">
                   {
                       (() => {
                           const eventTime = new Date(event.time);
@@ -71,28 +119,132 @@ export default function ViewEvents() {
                       })()
                   }
                 </span>
+                    {/* Expanded Section */}
+                    {expandedIndex === index && (
+                        <div className="mt-2 text-sm bg-mid p-4 w-100">
+                            <p className="font-bold">Card Tech: {event.cardTechnology}</p>
+                            <p>
+                                <span className="font-bold">{"Turnstile: " + event.turnstile}</span>{" "}
+                            </p>
+                        </div>
+                    )}
+                </div>
+            ))}
+        </div>
+    } else {
+        if (totalPages === 0) {
+            eventData = <h2 className={"mt-4 p-2 rounded-md text-center font-extrabold !bg-red-200 !text-red-900"}>No event data available</h2>
+        } else {
+            eventData = <h2 className={"mt-4 p-2 rounded-md text-center font-extrabold !bg-red-200 !text-red-900"}>No event data within specified filters</h2>
+        }
+    }
 
 
-                {/* Expanded Section */}
-                {expandedIndex === index && (
-                    <div className="mt-2 text-sm bg-mid p-4 w-100">
-                        <p className="font-bold">Card Tech: {event.cardTechnology}</p>
-                        <p>
-                            <span className="font-bold">{"Turnstile: " + event.turnstile}</span>{" "}
-                        </p>
-                    </div>
-                )}
-            </div>
-        ))}
-    </div>
 
     return (
         <div className="w-full">
             <div className={"p-2"}>
-                <h1 className="text-2xl text-primary font-bold">Scan Event History</h1>
-                <p>Filters coming soon...</p>
+                {/* Date Filter Section */}
+                <div className="flex space-x-4 py-2 justify-between">
+                    <div >
+                        <label htmlFor="afterDate" className="block">After</label>
+                        <input
+                            type="date"
+                            id="afterDate"
+                            value={afterDate}
+                            onChange={(e) => setAfterDate(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && applyFilters()}
+                            className="px-3 py-1 border rounded-md bg-mid-light h-8"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="beforeDate" className="block">Before</label>
+                        <input
+                            type="date"
+                            id="beforeDate"
+                            value={beforeDate}
+                            onChange={(e) => setBeforeDate(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && applyFilters()}
+                            className="px-3 py-1 border rounded-md bg-mid-light h-8"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="name" className="block">Name</label>
+                        <input
+                            type="text"
+                            id="name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && applyFilters()}
+                            className="px-3 py-1 border rounded-md bg-mid-light h-8"
+                            placeholder="Enter Name"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="cardNumber" className="block">Card Number</label>
+                        <input
+                            type="number"
+                            id="cardNumber"
+                            value={cardNumber}
+                            onChange={(e) => setCardNumber(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && applyFilters()}
+                            className="px-3 py-1 border rounded-md bg-mid-light h-8"
+                            placeholder="Enter Card No."
+                        />
+                    </div>
+                    {/*<div>*/}
+                    {/*    <label htmlFor="turnstile" className="block">Turnstile</label>*/}
+                    {/*    <input*/}
+                    {/*        type="number"*/}
+                    {/*        id="turnstile"*/}
+                    {/*        value={cardNumber}*/}
+                    {/*        onChange={(e) => setCardNumber(e.target.value)}*/}
+                    {/*        onKeyDown={(e) => e.key === "Enter" && applyFilters()}*/}
+                    {/*        className="px-3 py-1 border rounded-md bg-mid-light h-8"*/}
+                    {/*        placeholder="Enter Card No."*/}
+                    {/*    />*/}
+                    {/*</div>*/}
+                </div>
+                <div className="flex space-x-4 py-2 justify-end">
+                    {/* Filter Buttons */}
+                    <button
+                        onClick={applyFilters}
+                        className="font-bold bg-primary text-black px-4 py-1 rounded"
+                    >
+                        Confirm
+                    </button>
+                    <button
+                        onClick={clearFilters}
+                        className="font-bold bg-light text-white px-4 py-1 rounded"
+                    >
+                        Clear
+                    </button>
+                </div>
             </div>
+            <HorizontalRule />
             {eventData}
+
+            {/* Pagination controls */}
+            {events && events.length > 0 ? (
+            <div className="flex justify-between pt-4">
+                <button
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 bg-primary text-white rounded disabled:bg-transparent disabled:text-transparent"
+                >
+                    Previous
+                </button>
+                <span className="text-lg">{`Page ${currentPage} of ${totalPages}`}</span>
+                <button
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 bg-primary text-white rounded disabled:bg-gray-300 disabled:bg-transparent disabled:text-transparent"
+                >
+                    Next
+                </button>
+            </div>
+            ) : null}
+
         </div>
     );;
 }

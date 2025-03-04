@@ -1,12 +1,4 @@
 import ScanEvent from "@/models/scan-event"; // Import ScanEvent model if necessary
-export interface Event {
-    time: Date;
-    firstNames: string;
-    lastName: string;
-    turnstile: number;
-    cardNumber: number;
-    cardTechnology: string;
-}
 
 export function parseEvent(row: Record<string, string>): typeof ScanEvent | null {
     const timeStr = row["Occurrence Time"];
@@ -45,8 +37,7 @@ export function parseEvent(row: Record<string, string>): typeof ScanEvent | null
     return {
         _id: `${Math.floor(time.getTime() / 1000)}-${cardNumber}`,
         time,
-        firstNames: fullFirstName,
-        lastName,
+        name: fullFirstName + " " + lastName,
         cardNumber,
         cardTechnology,
         turnstile,
