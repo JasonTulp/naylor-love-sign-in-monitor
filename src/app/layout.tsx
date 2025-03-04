@@ -36,8 +36,8 @@ export default function RootLayout({
         <SessionProvider>
             <div className={"flex flex-col justify-between min-h-screen  bg-gradient-to-t from-mid to-dark"}>
                 {/*Header*/}
-                <header className="App-header bg-mid shadow-lg shadow-dark border-b-4 border-border bg-gradient-to-t from-mid to-dark sticky -top-32 lg:top-0 z-50">
-                    <h1 className={"font-extrabold text-5xl text-primary pt-10 pb-10"}>Naylor Love Sign In Monitor</h1>
+                <header className="App-header bg-mid shadow-lg shadow-dark border-b-4 border-border bg-gradient-to-t from-mid to-dark lg:sticky lg:top-0 z-50">
+                    <h1 className={"font-extrabold text-3xl p-4 md:text-4xl lg:text-5xl text-primary pt-10 pb-10"}>Naylor Love Sign In Monitor</h1>
                 </header>
 
                 {/*Main Content*/}
