@@ -1,9 +1,6 @@
 "use client";
-import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { dbConnect } from "@/lib/db-connect";
-import NavBar from "@/components/nav-bar";
 import {SessionProvider} from "next-auth/react";
 
 const geistSans = Geist({

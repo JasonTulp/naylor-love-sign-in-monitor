@@ -18,55 +18,44 @@ export async function POST(req: NextRequest) {
         const buffer = Buffer.from(await file.arrayBuffer());
         const events: any[] = [];
 
-        return new Promise((resolve, reject) => {
-            const stream = require("stream");
-            const readableStream = new stream.PassThrough();
-            readableStream.end(buffer);
+        const stream = require("stream");
+        const readableStream = new stream.PassThrough();
+        readableStream.end(buffer);
 
+        await new Promise((resolve, reject) => {
             readableStream
                 .pipe(csvParser())
-                .on("data", (row) => {
+                .on("data", (row: Record<string, string>) => {
                     const event = parseEvent(row);
                     if (event) events.push(event);
                 })
-                .on("end", async () => {
-                    try {
-                        // Connect to MongoDB
-                        await dbConnect();
-
-                        // Prepare the bulk write operations
-                        const bulkOps = events.map(event => ({
-                            updateOne: {
-                                filter: { _id: event._id }, // Find by unique identifier (_id)
-                                update: { $set: event }, // Set the fields to be updated
-                                upsert: true, // If the document doesn't exist, it will be inserted
-                            }
-                        }));
-
-                        // Perform the bulk operation
-                        if (bulkOps.length > 0) {
-                            const result = await ScanEvent.bulkWrite(bulkOps);
-                            console.log(`Processed ${result.upsertedCount} insertions and ${result.modifiedCount} updates.`);
-                        }
-
-                        // Return success response
-                        resolve(
-                            NextResponse.json(
-                                { message: "File uploaded and events saved to database" },
-                                { status: 200 }
-                            )
-                        );
-                    } catch (error) {
-                        console.error("Error saving to MongoDB:", error);
-                        reject(
-                            NextResponse.json({ message: "Error saving to MongoDB" }, { status: 500 })
-                        );
-                    }
-                })
-                .on("error", (err) => {
-                    reject(NextResponse.json({ message: "Error reading CSV file" }, { status: 500 }));
-                });
+                .on("end", resolve)  // Resolve when the parsing is done
+                .on("error", reject); // Reject on error
         });
+
+        // Connect to MongoDB
+        await dbConnect();
+
+        // Prepare the bulk write operations
+        const bulkOps = events.map(event => ({
+            updateOne: {
+                filter: { _id: event._id }, // Find by unique identifier (_id)
+                update: { $set: event }, // Set the fields to be updated
+                upsert: true, // If the document doesn't exist, it will be inserted
+            }
+        }));
+
+        // Perform the bulk operation
+        if (bulkOps.length > 0) {
+            const result = await ScanEvent.bulkWrite(bulkOps);
+            console.log(`Processed ${result.upsertedCount} insertions and ${result.modifiedCount} updates.`);
+        }
+
+        // Return success response
+        return NextResponse.json(
+            { message: "File uploaded and events saved to database" },
+            { status: 200 }
+        );
     } catch (error) {
         console.error(error);
         return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });

@@ -8,7 +8,7 @@ export interface Event {
     cardTechnology: string;
 }
 
-export function parseEvent(row: Record<string, string>): ScanEvent | null {
+export function parseEvent(row: Record<string, string>): typeof ScanEvent | null {
     const timeStr = row["Occurrence Time"];
     const eventStr = row["Event Full Description"]?.replace(/\r/g, "").trim(); // Remove carriage returns and trim spaces
 
