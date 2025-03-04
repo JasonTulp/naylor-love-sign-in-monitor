@@ -67,12 +67,12 @@ export default function ViewEvents() {
         applyFilters();
     }, [currentPage]);
 
-    if (loading) {
-        return <Spinner />;
-    }
+    // if (loading) {
+    //     return <Spinner />;
+    // }
     let eventData;
 
-    if (events && events.length) {
+    if (!loading && events && events.length) {
         eventData = <div className="space-y-2 pt-4 w-full mx-auto">
             {events.map((event, index) => (
                 <div
@@ -222,10 +222,11 @@ export default function ViewEvents() {
                 </div>
             </div>
             <HorizontalRule />
-            {eventData}
+
+            {loading ? (<Spinner />) : eventData}
 
             {/* Pagination controls */}
-            {events && events.length > 0 ? (
+            {!loading && events && events.length > 0 ? (
             <div className="flex justify-between pt-4">
                 <button
                     onClick={() => setCurrentPage(currentPage - 1)}
