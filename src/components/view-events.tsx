@@ -54,6 +54,7 @@ export default function ViewEvents() {
         setCardNumber("");
         setName("");
         setTurnstile("");
+        setCurrentPage(1);
         setResetFilters(true);
     };
 
@@ -67,7 +68,11 @@ export default function ViewEvents() {
 
     // Use effect is called when the component is mounted
     useEffect(() => {
-        applyFilters();
+        setLoading(true);
+        setExpandedIndex(-1);
+        fetchEvents(currentPage).then(() =>
+            setLoading(false)
+        );
     }, [currentPage]);
 
     let eventData;
