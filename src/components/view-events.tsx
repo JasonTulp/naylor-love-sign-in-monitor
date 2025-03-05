@@ -213,13 +213,13 @@ export default function ViewEvents() {
                     {/* Filter Buttons */}
                     <button
                         onClick={applyFilters}
-                        className="font-bold bg-primary text-black px-4 py-1 rounded"
+                        className="font-bold bg-primary text-black px-4 py-1 rounded shadow-md shadow-dark "
                     >
                         Confirm
                     </button>
                     <button
                         onClick={clearFilters}
-                        className="font-bold bg-light text-white px-4 py-1 rounded"
+                        className="font-bold bg-light text-white px-4 py-1 rounded shadow-md shadow-dark "
                     >
                         Clear
                     </button>
@@ -235,7 +235,7 @@ export default function ViewEvents() {
                 <button
                     onClick={() => setCurrentPage(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className="px-4 py-2 bg-primary text-white rounded disabled:bg-transparent disabled:text-transparent"
+                    className="font-bold px-4 py-2 bg-primary text-black rounded disabled:bg-transparent disabled:text-transparent"
                 >
                     Previous
                 </button>
@@ -243,7 +243,7 @@ export default function ViewEvents() {
                 <button
                     onClick={() => setCurrentPage(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className="px-4 py-2 bg-primary text-white rounded disabled:bg-gray-300 disabled:bg-transparent disabled:text-transparent"
+                    className="font-bold px-4 py-2 bg-primary text-black rounded disabled:bg-gray-300 disabled:bg-transparent disabled:text-transparent "
                 >
                     Next
                 </button>
