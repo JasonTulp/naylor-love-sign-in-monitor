@@ -19,12 +19,15 @@ export async function GET(req: NextRequest) {
         // Set date query based on before and after
         const query: any = {};
         if (before) {
-
-            console.log("Before date: " + before);
+            console.log("Before date (raw):", before);
+            const beforeDate = new Date(before);
+            console.log("Before date (converted):", beforeDate.toISOString());
             query.time = { $lte: new Date(before) };
         }
         if (after) {
-            console.log("After date: " + after);
+            console.log("After date (raw):", after);
+            const afterDate = new Date(after);
+            console.log("After date (converted):", afterDate.toISOString());
             query.time = { ...query.time, $gte: new Date(after) };
         }
         if (cardNumber) {
