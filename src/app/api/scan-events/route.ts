@@ -22,13 +22,13 @@ export async function GET(req: NextRequest) {
             console.log("Before date (raw):", before);
             const beforeDate = new Date(before);
             console.log("Before date (converted):", beforeDate.toISOString());
-            query.time = { $lte: beforeDate.toISOString() };
+            query.time = { $lte: before };
         }
         if (after) {
             console.log("After date (raw):", after);
             const afterDate = new Date(after);
-            console.log("After date (converted):", afterDate.toISOString());
-            query.time = { ...query.time, $gte: afterDate.toISOString() };
+            console.log("After date (converted):", afterDate);
+            query.time = { ...query.time, $gte: after };
         }
         if (cardNumber) {
             query.cardNumber = cardNumber;

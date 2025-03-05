@@ -22,8 +22,8 @@ export default function ViewEvents() {
                 page: currentPage,
                 limit: 25,
             };
-            if (beforeDate) queryParams.before = beforeDate;
-            if (afterDate) queryParams.after = afterDate;
+            if (beforeDate) queryParams.before = new Date(beforeDate).toISOString();
+            if (afterDate) queryParams.after = new Date(afterDate).toISOString();
             if (cardNumber) queryParams.cardNumber = cardNumber;
             if (name) queryParams.name = name;
             if (turnstile) queryParams.turnstile = turnstile;
