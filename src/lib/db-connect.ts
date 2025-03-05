@@ -12,12 +12,12 @@ let cached: Connection | null = null;
 
 export async function dbConnect() {
     if (cached) {
-        console.log("DB CONNECT: Using cached db connection");
+        // console.log("DB CONNECT: Using cached db connection");
         return cached
     }
 
     try {
-        console.log("DB CONNECT: Establishing new connection")
+        // console.log("DB CONNECT: Establishing new connection")
         // If no cached connection exists, establish a new connection to MongoDB
         const cnx = await mongoose.connect(process.env.MONGODB_URI!);
         // Cache the connection for future use

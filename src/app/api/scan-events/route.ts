@@ -19,9 +19,12 @@ export async function GET(req: NextRequest) {
         // Set date query based on before and after
         const query: any = {};
         if (before) {
+
+            console.log("Before date: " + before);
             query.time = { $lte: new Date(before) };
         }
         if (after) {
+            console.log("After date: " + after);
             query.time = { ...query.time, $gte: new Date(after) };
         }
         if (cardNumber) {
@@ -46,6 +49,8 @@ export async function GET(req: NextRequest) {
 
         // Count the total number of documents to calculate total pages
         const totalEvents = await ScanEvent.countDocuments(query);
+
+        console.log("Fetched " + eventData.length + " events");
 
         return NextResponse.json({
             success: true,
