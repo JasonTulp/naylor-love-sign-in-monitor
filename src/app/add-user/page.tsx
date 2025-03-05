@@ -1,8 +1,9 @@
 "use client";
-import { useState } from "react";
-import {signIn} from "next-auth/react";
+import {useEffect, useState} from "react";
+import {signIn, useSession} from "next-auth/react";
 import HorizontalRule from "@/components/horizontal-rule";
 import {useRouter} from "next/navigation";
+import Spinner from "@/components/spinner";
 
 
 export default function RegisterPage() {
@@ -15,6 +16,7 @@ export default function RegisterPage() {
     const [message, setMessage] = useState("");
     const [isError, setIsError] = useState<boolean>(false);
     const router = useRouter();
+    const { data: session } = useSession();
 
     const handleSubmit = async (e: { preventDefault: () => void; }) => {
         e.preventDefault();
@@ -35,9 +37,23 @@ export default function RegisterPage() {
         }
     };
 
+    useEffect(() => {
+        if (!session) {
+            router.push("/signin");
+        } else if (session.user?.role !== "admin") {
+            router.push("/");
+        }
+    }, [session, router]); // Runs whenever `session` or `router` changes
+
+    if (!session) {
+        return <Spinner />
+    }
+
     return (
         <div className={"panel !pl-20 !pr-20"}>
-            <h1 className={"text-3xl font-extrabold text-primary mb-4 content-center text-center"}>Register</h1>
+            <h1 className={"text-3xl font-extrabold text-primary mb-4 content-center text-center"}>Register new user</h1>
+            <p className={"text-xl mb-4 content-center text-center"}>New users will be able to sign in and view any data
+            on this site. Only admins are able to add new users.</p>
             <HorizontalRule />
             <form onSubmit={handleSubmit} className={"flex flex-col space-y-4"}>
                 <input
@@ -100,16 +116,6 @@ export default function RegisterPage() {
                     required
                 />
                 <button type="submit"className = "panel !p-1 text-2xl !rounded-3xl font-extrabold text-darker !bg-primary">Register</button>
-                <button
-                    type="button"
-                    onClick={() => signIn("google", {
-                        redirect: true,
-                        callbackUrl: "/profile", // Redirect after login
-                    })}
-                    className="link"
-                >
-                    Sign in with Google
-                </button>
             </form>
 
             <p className={"italic text-center mt-8"}>

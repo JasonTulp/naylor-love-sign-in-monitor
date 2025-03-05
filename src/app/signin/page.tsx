@@ -17,24 +17,13 @@ export default function SignInPage() {
                 usernameOrEmail,
                 password,
                 redirect: false,
-                // callbackUrl: "/profile",
             });
 
             if (result?.error) {
-                // Redirect to Google sign in if the user email was registered with google
-                // TODO add some way for users to link accounts
-                if (result.error === "redirect-google") {
-                    await signIn("google", {
-                        redirect: true,
-                        callbackUrl: "/profile",
-                    });
-                    return;
-                } else {
-                    setMessage(result.error || "An error occurred. Please try again.");
-                }
+                setMessage(result.error || "An error occurred. Please try again.");
             } else {
                 await new Promise((resolve) => setTimeout(resolve, 500));
-                router.push("/profile");
+                router.push("/");
             }
         } catch (error: any) {
             setMessage(error.message || "An error occurred. Please try again.");
@@ -58,20 +47,10 @@ export default function SignInPage() {
                     onChange={(e) => setPassword(e.target.value)}
                 />
                 <button type="submit" className = "panel !p-1 text-2xl !rounded-3xl font-extrabold text-darker !bg-primary">Sign in</button>
-                <button
-                    type="button"
-                    onClick={() => signIn("google", {
-                        redirect: true,
-                        callbackUrl: "/profile", // Redirect after login
-                    })}
-                    className="link"
-                >
-                    Sign in with Google
-                </button>
             </form>
 
             <p className={"italic text-center mt-8"}>
-                Don't have an account? <a href="/signup" className={"link"}>Register here</a>
+                Don't have an account? Ask your system administrator to create one for you.
             </p>
 
             {message && (
