@@ -18,7 +18,7 @@ export default function NavBar() {
     }
 
     return (
-        <nav className="flex flex-col w-full items-center bg-mid-light">
+        <nav className="flex flex-col w-full items-center bg-mid-light px-4">
             <div className={"lg:w-3/4 xl:w-1/2 flex w-full justify-between "}>
                 <ul className="flex space-x-4">
                     {/*<li className="p-2 text-xl font-bold hover:underline hover:text-primary">*/}

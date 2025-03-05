@@ -8,7 +8,7 @@ export default function SiteHeader() {
         <header
             className="App-header bg-mid shadow-lg shadow-dark border-b-4 border-border bg-gradient-to-t from-mid to-dark lg:sticky lg:top-0 z-50"
         >
-            <div className="flex flex-row items-end pb-4 pt-10 justify-items-start w-full lg:w-3/4 xl:w-1/2">
+            <div className="flex flex-row items-end p-4 pb-4 pt-10 justify-items-start w-full lg:w-3/4 xl:w-1/2">
                 <Link className="relative flex flex-row group pb-1" href="/">
                     {/* Black & White (Default) */}
                     <img
