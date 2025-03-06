@@ -10,10 +10,12 @@
   },
   "dependencies": {
     "-": "^0.0.1",
+    "@types/luxon": "^3.4.2",
     "bcryptjs": "^2.4.3",
     "csv-parser": "^3.2.0",
     "framer-motion": "^12.4.1",
     "globals": "^15.14.0",
+    "luxon": "^3.5.0",
     "mongoose": "^8.10.0",
     "multer": "^1.4.5-lts.1",
     "next": "15.1.6",

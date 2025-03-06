@@ -1,4 +1,13 @@
 import ScanEvent from "@/models/scan-event"; // Import ScanEvent model if necessary
+import { DateTime } from "luxon";
+
+function convertToNZTime(timeStr) {
+    // Parse the given format (M/D/YYYY h:mm:ss A)
+    const parsedTime = DateTime.fromFormat(timeStr, "M/d/yyyy h:mm:ss a", { zone: "Pacific/Auckland" });
+    // Convert to NZ time
+    // const nzTime = parsedTime.setZone("Pacific/Auckland");
+    return parsedTime.toJSDate(); // Return as a Date object
+}
 
 export function parseEvent(row: Record<string, string>): typeof ScanEvent | null {
     const timeStr = row["Occurrence Time"];
@@ -10,9 +19,8 @@ export function parseEvent(row: Record<string, string>): typeof ScanEvent | null
     }
 
     // Parse time
-    const time = new Date(timeStr)
-    const localTime = new Date(time.toLocaleString('en-NZ', { timeZone: 'Pacific/Auckland' }));
-    console.log("Converting this time: ", timeStr, " to this time: ", localTime, );
+    const time = convertToNZTime(timeStr)
+    console.log("Converting this time: ", timeStr, " to this time: ", time, );
 
     // Extract name using regex
     const nameMatch = eventStr.match(/^(.+?), (.+?) was granted entry/);
@@ -37,8 +45,8 @@ export function parseEvent(row: Record<string, string>): typeof ScanEvent | null
     const cardTechnology = cardTechMatch ? cardTechMatch[1].trim() : "Unknown";
 
     return {
-        _id: `${Math.floor(localTime.getTime() / 1000)}-${cardNumber}`,
-        time: localTime,
+        _id: `${Math.floor(time.getTime() / 1000)}-${cardNumber}`,
+        time,
         name: fullFirstName + " " + lastName,
         cardNumber,
         cardTechnology,
