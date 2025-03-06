@@ -1,7 +1,7 @@
 import ScanEvent from "@/models/scan-event"; // Import ScanEvent model if necessary
 import { DateTime } from "luxon";
 
-function convertToNZTime(timeStr) {
+function convertToNZTime(timeStr: string) {
     // Parse the given format (M/D/YYYY h:mm:ss A)
     const parsedTime = DateTime.fromFormat(timeStr, "M/d/yyyy h:mm:ss a", { zone: "Pacific/Auckland" });
     // Convert to NZ time
