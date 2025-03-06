@@ -273,7 +273,7 @@ export default function ViewEvents() {
             <HorizontalRule />
 
             <div className="flex space-x-4 justify-center items-center panel">
-                <p htmlFor="uniqueEntries" className="text-md ">
+                <p className="text-md ">
                     Would you like to limit results to show only the latest entry for each user?
                 </p>
                 <input

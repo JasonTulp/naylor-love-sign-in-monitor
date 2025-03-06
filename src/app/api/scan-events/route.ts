@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
                 .sort({ time: -1 });
             // Filter out duplicates based on `cardNumber` and get the latest
             const seenCardNumbers = new Set();
-            eventData = rawData.filter((item) => {
+            eventData = rawData.filter((item: any) => {
                 if (seenCardNumbers.has(item.cardNumber)) {
                     return false;  // Skip if the cardNumber has already been seen
                 }
