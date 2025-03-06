@@ -10,7 +10,9 @@ export function parseEvent(row: Record<string, string>): typeof ScanEvent | null
     }
 
     // Parse time
-    const time = new Date(timeStr);
+    const time = new Date(timeStr)
+    const localTime = new Date(time.toLocaleString('en-NZ', { timeZone: 'Pacific/Auckland' }));
+    console.log("Converting this time: ", time, " to this time: ", localTime);
 
     // Extract name using regex
     const nameMatch = eventStr.match(/^(.+?), (.+?) was granted entry/);
@@ -35,8 +37,8 @@ export function parseEvent(row: Record<string, string>): typeof ScanEvent | null
     const cardTechnology = cardTechMatch ? cardTechMatch[1].trim() : "Unknown";
 
     return {
-        _id: `${Math.floor(time.getTime() / 1000)}-${cardNumber}`,
-        time,
+        _id: `${Math.floor(localTime.getTime() / 1000)}-${cardNumber}`,
+        time: localTime,
         name: fullFirstName + " " + lastName,
         cardNumber,
         cardTechnology,

@@ -8,13 +8,16 @@ export default function ViewEvents() {
     const [hoverIndex, setHoverIndex] = useState(-1);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [totalEvents, setTotalEvents] = useState(1);
     const [loading, setLoading] = useState(true);
     const [beforeDate, setBeforeDate] = useState<string>("");
     const [afterDate, setAfterDate] = useState<string>("");
+    const [specificDate, setSpecificDate] = useState<string>("");
     const [cardNumber, setCardNumber] = useState<string>("");
     const [turnstile, setTurnstile] = useState<string>("");
     const [name, setName] = useState<string>("");
     const [resetFilters, setResetFilters] = useState(false);
+    const [cardFilter, setCardFilter] = useState(false);
 
     const fetchEvents = async (page: number) => {
         try {
@@ -24,6 +27,7 @@ export default function ViewEvents() {
             };
             if (beforeDate) queryParams.before = new Date(beforeDate).toISOString();
             if (afterDate) queryParams.after = new Date(afterDate).toISOString();
+            if (specificDate) queryParams.specificDate = new Date(specificDate).toISOString();
             if (cardNumber) queryParams.cardNumber = cardNumber;
             if (name) queryParams.name = name;
             if (turnstile) queryParams.turnstile = turnstile;
@@ -32,6 +36,7 @@ export default function ViewEvents() {
             const data = await response.json();
             setEvents(data.data);
             setTotalPages(data.totalPages);
+            setTotalEvents(data.totalEvents);
         } catch (error) {
             console.error("Error fetching events:", error);
         } finally {
@@ -58,13 +63,20 @@ export default function ViewEvents() {
         setResetFilters(true);
     };
 
-// Run applyFilters *only* after state updates
+    // Run applyFilters *only* after state updates
     useEffect(() => {
         if (resetFilters) {
             applyFilters();
             setResetFilters(false);
         }
     }, [resetFilters]);
+
+    useEffect(() => {
+        if (cardFilter) {
+            applyFilters();
+            setCardFilter(false);
+        }
+    }, [cardFilter]);
 
     // Use effect is called when the component is mounted
     useEffect(() => {
@@ -92,18 +104,32 @@ export default function ViewEvents() {
                     onMouseLeave={() => setHoverIndex(-1)}
                 >
                     {/* Top Left: Name */}
-                    <span className="absolute top-2 left-5 text-xl font-bold capitalize">
-                    {event.name}
-                </span>
+                    <span
+                        className="absolute top-2 left-5 text-xl font-bold capitalize transition-colors duration-200 hover:text-primary"
+                        onClick={(e) => {
+                        e.stopPropagation(); // Prevents expanding the card
+                        setCardNumber(event.cardNumber);
+                        setCardFilter(true);
+                    }}
+                        >
+                        {event.name}
+                    </span>
 
                     {/* Top Right: cardNumber */}
-                    <span className={`absolute top-2 right-5 text-2xl font-bold`}>
-                    {event.cardNumber}
-                </span>
+                    <span
+                        className="absolute top-2 right-5 text-2xl font-bold transition-colors duration-200 hover:text-primary"
+                        onClick={(e) => {
+                            e.stopPropagation(); // Prevents expanding the card
+                            setCardNumber(event.cardNumber);
+                            setCardFilter(true);
+                        }}
+                    >
+                        {event.cardNumber}
+                    </span>
 
                     {/* Bottom Left: Time/ Date */}
                     <span className="absolute bottom-2 left-5 text-md text-primary">
-                  {
+                    {
                       (() => {
                           const eventTime = new Date(event.time);
                           const formattedDate = new Intl.DateTimeFormat("en-GB", {
@@ -121,8 +147,8 @@ export default function ViewEvents() {
                           const displayDate = formattedDate.replace(",", ""); // To remove any comma
                           return displayDate;
                       })()
-                  }
-                </span>
+                    }
+                    </span>
                     {/* Expanded Section */}
                     {expandedIndex === index && (
                         <div className="mt-2 text-sm bg-mid p-4 w-100">
@@ -149,27 +175,38 @@ export default function ViewEvents() {
                 {/* Date Filter Section */}
                 <div className="grid grid-cols-2 sm:grid-cols-4  gap-x-2 gap-y-1 py-2 w-full">
                     <div className="flex flex-col col-span-2">
-                        <label htmlFor="afterDate" className="block">After</label>
+                        <label htmlFor="specificDate" className="block">Date</label>
                         <input
-                            type="datetime-local"
+                            type="date"
                             id="afterDate"
-                            value={afterDate}
-                            onChange={(e) => setAfterDate(e.target.value)}
+                            value={specificDate}
+                            onChange={(e) => setSpecificDate(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && applyFilters()}
                             className="input h-8 w-full"
                         />
                     </div>
-                    <div className="flex flex-col col-span-2">
-                        <label htmlFor="beforeDate" className="block">Before</label>
-                        <input
-                            type="datetime-local"
-                            id="beforeDate"
-                            value={beforeDate}
-                            onChange={(e) => setBeforeDate(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && applyFilters()}
-                            className="input h-8 w-full"
-                        />
-                    </div>
+                    {/*<div className="flex flex-col col-span-2">*/}
+                    {/*    <label htmlFor="afterDate" className="block">After</label>*/}
+                    {/*    <input*/}
+                    {/*        type="datetime-local"*/}
+                    {/*        id="afterDate"*/}
+                    {/*        value={afterDate}*/}
+                    {/*        onChange={(e) => setAfterDate(e.target.value)}*/}
+                    {/*        onKeyDown={(e) => e.key === "Enter" && applyFilters()}*/}
+                    {/*        className="input h-8 w-full"*/}
+                    {/*    />*/}
+                    {/*</div>*/}
+                    {/*<div className="flex flex-col col-span-2">*/}
+                    {/*    <label htmlFor="beforeDate" className="block">Before</label>*/}
+                    {/*    <input*/}
+                    {/*        type="datetime-local"*/}
+                    {/*        id="beforeDate"*/}
+                    {/*        value={beforeDate}*/}
+                    {/*        onChange={(e) => setBeforeDate(e.target.value)}*/}
+                    {/*        onKeyDown={(e) => e.key === "Enter" && applyFilters()}*/}
+                    {/*        className="input h-8 w-full"*/}
+                    {/*    />*/}
+                    {/*</div>*/}
                     <div className="flex flex-col col-span-2">
                         <label htmlFor="name" className="block">Name</label>
                         <input
@@ -210,6 +247,7 @@ export default function ViewEvents() {
 
                 <div className="flex space-x-4 py-2 justify-end">
 
+                    <h1 className="text-lg text-right">Total: {totalEvents}</h1>
                     {/* Filter Buttons */}
                     <button
                         onClick={applyFilters}

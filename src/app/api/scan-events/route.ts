@@ -9,6 +9,7 @@ export async function GET(req: NextRequest) {
         const limit = parseInt(searchParams.get('limit') || '25');
         const before = searchParams.get('before');
         const after = searchParams.get('after');
+        const specificDate = searchParams.get('specificDate');
         const cardNumber = searchParams.get('cardNumber');
         const name = searchParams.get("name");
         const turnstile = searchParams.get("turnstile");
@@ -18,11 +19,15 @@ export async function GET(req: NextRequest) {
 
         // Set date query based on before and after
         const query: any = {};
-        if (before) {
-            query.time = { $lte: before };
-        }
-        if (after) {
-            query.time = { ...query.time, $gte: after };
+        if (specificDate) {
+            query.time = { $gte: specificDate, $lt: new Date(specificDate).setDate(new Date(specificDate).getDate() + 1) };
+        } else {
+            if (before) {
+                query.time = { $lte: before };
+            }
+            if (after) {
+                query.time = { ...query.time, $gte: after };
+            }
         }
         if (cardNumber) {
             query.cardNumber = cardNumber;
