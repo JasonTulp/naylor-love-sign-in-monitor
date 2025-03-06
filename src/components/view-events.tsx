@@ -244,25 +244,29 @@ export default function ViewEvents() {
                             placeholder="Enter Turnstile"
                         />
                     </div>
+                    <div className="flex flex-col col-span-2">
+                        <div className="flex space-x-4 py-2 justify-end mt-4">
+
+                            <h1 className="text-lg text-right">Total: {totalEvents}</h1>
+                            {/* Filter Buttons */}
+                            <button
+                                onClick={applyFilters}
+                                className="font-bold bg-primary text-black px-4 py-1 rounded shadow-md shadow-dark "
+                            >
+                                Confirm
+                            </button>
+                            <button
+                                onClick={clearFilters}
+                                className="font-bold bg-light text-white px-4 py-1 rounded shadow-md shadow-dark "
+                            >
+                                Clear
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
 
-                <div className="flex space-x-4 py-2 justify-end">
 
-                    <h1 className="text-lg text-right">Total: {totalEvents}</h1>
-                    {/* Filter Buttons */}
-                    <button
-                        onClick={applyFilters}
-                        className="font-bold bg-primary text-black px-4 py-1 rounded shadow-md shadow-dark "
-                    >
-                        Confirm
-                    </button>
-                    <button
-                        onClick={clearFilters}
-                        className="font-bold bg-light text-white px-4 py-1 rounded shadow-md shadow-dark "
-                    >
-                        Clear
-                    </button>
-                </div>
             </div>
             <HorizontalRule />
 

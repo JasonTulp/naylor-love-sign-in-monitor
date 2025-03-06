@@ -46,18 +46,26 @@ export async function POST(req: NextRequest) {
         }));
 
         // Perform the bulk operation
+        let uploadedCount = 0;
         if (bulkOps.length > 0) {
             const result = await ScanEvent.bulkWrite(bulkOps);
+            uploadedCount = result.upsertedCount;
             console.log(`Processed ${result.upsertedCount} insertions and ${result.modifiedCount} updates.`);
         }
 
+        let message;
+        if (uploadedCount === 0) {
+            message = "No new files uploaded";
+        } else {
+            message = uploadedCount + " files uploaded. Refresh the page to view them"
+        }
         // Return success response
         return NextResponse.json(
-            { message: "File uploaded and events saved to database" },
+            { message },
             { status: 200 }
         );
     } catch (error) {
         console.error(error);
-        return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({ message: "Error uploading files: " + error }, { status: 500 });
     }
 }

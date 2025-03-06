@@ -60,6 +60,7 @@ export async function GET(req: NextRequest) {
 
         // Fetch the paginated data
         const eventData = await ScanEvent.find(query)
+            .sort({ time: -1 })
             .skip(skip)
             .limit(limit);
 
