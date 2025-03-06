@@ -21,10 +21,12 @@ export async function POST(req: NextRequest) {
             if (value instanceof File) {
                 // Check if the file is a CSV by looking at its MIME type
                 if (value.type === 'text/csv') {
+                    console.log("CSV FILE FOUND");
                     attachments.push(value);
                 }
             }
         }
+        console.log("Found attachments: ", attachments.length, " CSV file(s)");
 
         if (attachments.length > 0) {
             // Call the /api/upload with the CSV file(s)
@@ -33,6 +35,7 @@ export async function POST(req: NextRequest) {
                 const uploadFormData = new FormData();
                 uploadFormData.append("file", attachment);
 
+                console.log("Attempting to upload attachment " + attachment.name);
                 // Send the file to your /api/upload endpoint
                 const uploadResponse = await fetch("/api/upload", {
                     method: "POST",
