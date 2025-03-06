@@ -54,7 +54,8 @@ export async function POST(req: NextRequest) {
         }
 
         return NextResponse.json({ success: true, message: "Email received" });
-    } catch {
-        return NextResponse.json({ success: false, error: "Error retrieving Email" }, { status: 500 });
+    } catch (error: any) {
+        console.error("Error in upload API:", error);
+        return NextResponse.json({ message: "Error uploading files: " + error.message }, { status: 500 });
     }
 }
