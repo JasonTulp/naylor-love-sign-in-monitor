@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
         const cardNumber = searchParams.get('cardNumber');
         const name = searchParams.get("name");
         const turnstile = searchParams.get("turnstile");
+        const isUnique = searchParams.get("isUnique") === "true";
 
         // Calculate the number of items to skip based on the page
         const skip = (page - 1) * limit;
@@ -59,13 +60,37 @@ export async function GET(req: NextRequest) {
         await dbConnect();
 
         // Fetch the paginated data
-        const eventData = await ScanEvent.find(query)
-            .sort({ time: -1 })
-            .skip(skip)
-            .limit(limit);
+        let eventData;
+        let totalEvents;
+        let totalPages;
+        console.log("unique? " + isUnique + " specificDate? " + specificDate);
+
+        if (isUnique && specificDate) {
+            console.log("Fetching unique events for " + specificDate);
+            const rawData = await ScanEvent.find(query)
+                .sort({ time: -1 });
+            // Filter out duplicates based on `cardNumber` and get the latest
+            const seenCardNumbers = new Set();
+            eventData = rawData.filter((item) => {
+                if (seenCardNumbers.has(item.cardNumber)) {
+                    return false;  // Skip if the cardNumber has already been seen
+                }
+                seenCardNumbers.add(item.cardNumber);
+                return true;
+            });
+            totalEvents = eventData.length;
+            totalPages = 1;
+        } else {
+            console.log("Fetching all events for " + specificDate);
+            eventData = await ScanEvent.find(query)
+                .sort({ time: -1 })
+                .skip(skip)
+                .limit(limit);
+            totalEvents = await ScanEvent.countDocuments(query);
+            totalPages = Math.ceil(totalEvents / limit);
+        }
 
         // Count the total number of documents to calculate total pages
-        const totalEvents = await ScanEvent.countDocuments(query);
 
         console.log("Fetched " + eventData.length + " events");
 
@@ -73,7 +98,7 @@ export async function GET(req: NextRequest) {
             success: true,
             data: eventData,
             totalEvents,
-            totalPages: Math.ceil(totalEvents / limit),  // Calculate the total number of pages
+            totalPages: totalPages,
             currentPage: page,
         });
     } catch (error) {

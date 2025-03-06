@@ -15,6 +15,7 @@ export default function ViewEvents() {
     const [specificDate, setSpecificDate] = useState<string>("");
     const [cardNumber, setCardNumber] = useState<string>("");
     const [turnstile, setTurnstile] = useState<string>("");
+    const [isUnique, setIsUnique] = useState<boolean>(false);
     const [name, setName] = useState<string>("");
     const [setFilters, setSetFilters] = useState(false);
 
@@ -30,6 +31,7 @@ export default function ViewEvents() {
             if (cardNumber) queryParams.cardNumber = cardNumber;
             if (name) queryParams.name = name;
             if (turnstile) queryParams.turnstile = turnstile;
+            if (isUnique) queryParams.isUnique = isUnique? "true" : "false";
 
             const response = await fetch(`/api/scan-events?${new URLSearchParams(queryParams)}`);
             const data = await response.json();
@@ -59,6 +61,7 @@ export default function ViewEvents() {
         setCardNumber("");
         setName("");
         setTurnstile("");
+        setIsUnique(false);
         setCurrentPage(1);
         setSetFilters(true);
     };
@@ -77,7 +80,7 @@ export default function ViewEvents() {
         if (specificDate !== "") {
             applyFilters();
         }
-    }, [specificDate]);
+    }, [specificDate, isUnique]);
 
 
     // Use effect is called when the component is mounted
@@ -264,12 +267,25 @@ export default function ViewEvents() {
                             </button>
                         </div>
                     </div>
-
                 </div>
-
 
             </div>
             <HorizontalRule />
+
+            <div className="flex space-x-4 justify-center items-center panel">
+                <p htmlFor="uniqueEntries" className="text-md ">
+                    Would you like to limit results to show only the latest entry for each user?
+                </p>
+                <input
+                    type="checkbox"
+                    id="uniqueEntries"
+                    checked={isUnique}
+                    onChange={(e) => setIsUnique(e.target.checked)}  // Update the state
+                    className={`h-6 w-6 border-2 rounded-md transition-all duration-300
+                            ${isUnique ? 'bg-green-500 border-green-700' : 'bg-red-500 border-red-700'} 
+                            checked:bg-white checked:border-transparent focus:ring-0`}
+                />
+            </div>
 
             {loading ? (<Spinner />) : eventData}
 

@@ -11,9 +11,13 @@ export async function POST(req: NextRequest) {
             subject: formData.get("Subject"),
             body: formData.get("body-plain") || formData.get("body-html"),
         };
-
         // Log the email data for inspection
         console.log(emailData);
+
+        if (process.env.SENDER_ADDRESS && emailData.from !== process.env.SENDER_ADDRESS) {
+            console.log("Email from unauthorized sender. Ignoring.");
+            return NextResponse.json({ message: "Unauthorized sender" }, { status: 403 });
+        }
 
         // Check for file attachments
         const attachments: File[] = [];
