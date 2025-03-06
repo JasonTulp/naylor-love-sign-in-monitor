@@ -12,7 +12,7 @@ export function parseEvent(row: Record<string, string>): typeof ScanEvent | null
     // Parse time
     const time = new Date(timeStr)
     const localTime = new Date(time.toLocaleString('en-NZ', { timeZone: 'Pacific/Auckland' }));
-    console.log("Converting this time: ", time, " to this time: ", localTime);
+    console.log("Converting this time: ", timeStr, " to this time: ", localTime, );
 
     // Extract name using regex
     const nameMatch = eventStr.match(/^(.+?), (.+?) was granted entry/);
