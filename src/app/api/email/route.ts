@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
 
                 console.log("Attempting to upload attachment " + attachment.name);
                 // Send the file to your /api/upload endpoint
-                const uploadResponse = await fetch("${window.location.origin}/api/upload", {
+                const uploadResponse = await fetch(`${window.location.origin}/api/upload`, {
                     method: "POST",
                     body: uploadFormData,
                 });
