@@ -56,6 +56,7 @@ export default function ViewEvents() {
     const clearFilters = () => {
         setBeforeDate("");
         setAfterDate("");
+        setSpecificDate("");
         setCardNumber("");
         setName("");
         setTurnstile("");

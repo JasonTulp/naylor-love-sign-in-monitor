@@ -1,6 +1,19 @@
 import {NextRequest, NextResponse} from "next/server";
 import { dbConnect } from "@/lib/db-connect";
 import ScanEvent from "@/models/scan-event";
+import { DateTime } from "luxon";
+
+function getNZDateRange(dateStr: string) {
+    // Convert the given date (YYYY-MM-DD) to start/end of the day in NZ time
+    const startOfDayNZ = DateTime.fromISO(dateStr, { zone: "Pacific/Auckland" }).startOf("day");
+    const endOfDayNZ = startOfDayNZ.plus({ days: 1 });
+
+    // Convert both to UTC for database query
+    return {
+        $gte: startOfDayNZ.toUTC().toJSDate(),
+        $lt: endOfDayNZ.toUTC().toJSDate(),
+    };
+}
 
 export async function GET(req: NextRequest) {
     try {
@@ -20,7 +33,8 @@ export async function GET(req: NextRequest) {
         // Set date query based on before and after
         const query: any = {};
         if (specificDate) {
-            query.time = { $gte: specificDate, $lt: new Date(specificDate).setDate(new Date(specificDate).getDate() + 1) };
+            // query.time = { $gte: specificDate, $lt: new Date(specificDate).setDate(new Date(specificDate).getDate() + 1) };
+            query.time = getNZDateRange(specificDate);
         } else {
             if (before) {
                 query.time = { $lte: before };

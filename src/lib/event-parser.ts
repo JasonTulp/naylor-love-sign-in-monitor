@@ -5,7 +5,6 @@ function convertToNZTime(timeStr: string) {
     // Parse the given format (M/D/YYYY h:mm:ss A)
     const parsedTime = DateTime.fromFormat(timeStr, "M/d/yyyy h:mm:ss a", { zone: "Pacific/Auckland" });
     // Convert to NZ time
-    // const nzTime = parsedTime.setZone("Pacific/Auckland");
     return parsedTime.toJSDate(); // Return as a Date object
 }
 
