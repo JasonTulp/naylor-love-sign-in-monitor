@@ -16,8 +16,7 @@ export default function ViewEvents() {
     const [cardNumber, setCardNumber] = useState<string>("");
     const [turnstile, setTurnstile] = useState<string>("");
     const [name, setName] = useState<string>("");
-    const [resetFilters, setResetFilters] = useState(false);
-    const [cardFilter, setCardFilter] = useState(false);
+    const [setFilters, setSetFilters] = useState(false);
 
     const fetchEvents = async (page: number) => {
         try {
@@ -61,23 +60,25 @@ export default function ViewEvents() {
         setName("");
         setTurnstile("");
         setCurrentPage(1);
-        setResetFilters(true);
+        setSetFilters(true);
     };
 
     // Run applyFilters *only* after state updates
     useEffect(() => {
-        if (resetFilters) {
+        if (setFilters) {
             applyFilters();
-            setResetFilters(false);
+            setSetFilters(false);
         }
-    }, [resetFilters]);
+    }, [setFilters]);
 
+
+    // Run applyFilters *only* after state updates
     useEffect(() => {
-        if (cardFilter) {
+        if (specificDate !== "") {
             applyFilters();
-            setCardFilter(false);
         }
-    }, [cardFilter]);
+    }, [specificDate]);
+
 
     // Use effect is called when the component is mounted
     useEffect(() => {
@@ -110,7 +111,7 @@ export default function ViewEvents() {
                         onClick={(e) => {
                         e.stopPropagation(); // Prevents expanding the card
                         setCardNumber(event.cardNumber);
-                        setCardFilter(true);
+                        setSetFilters(true);
                     }}
                         >
                         {event.name}
@@ -122,7 +123,7 @@ export default function ViewEvents() {
                         onClick={(e) => {
                             e.stopPropagation(); // Prevents expanding the card
                             setCardNumber(event.cardNumber);
-                            setCardFilter(true);
+                            setSetFilters(true);
                         }}
                     >
                         {event.cardNumber}
