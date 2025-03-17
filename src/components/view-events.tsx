@@ -23,7 +23,7 @@ export default function ViewEvents() {
         try {
             const queryParams: any = {
                 page: currentPage,
-                limit: 25,
+                limit: 50,
             };
             if (beforeDate) queryParams.before = new Date(beforeDate).toISOString();
             if (afterDate) queryParams.after = new Date(afterDate).toISOString();
@@ -92,6 +92,37 @@ export default function ViewEvents() {
         );
     }, [currentPage]);
 
+    const formatDateLong = (date: Date) => {
+        const formattedDate = new Intl.DateTimeFormat("en-GB", {
+            weekday: "short",  // "Mon"
+            day: "2-digit",    // "23"
+            month: "2-digit",  // "04"
+            year: "numeric",   // "2024"
+            hour: "2-digit",   // "12"
+            minute: "2-digit", // "13"
+            second: "2-digit", // "10"
+            hour12: true,       // 12-hour format with AM/PM
+            timeZone: "Pacific/Auckland", // NZ time
+        }).format(date);
+
+        const displayDate = formattedDate.replace(",", ""); // To remove any comma
+        return displayDate;
+    }
+
+    const formatDateShort = (date: Date) => {
+        const formattedDate = new Intl.DateTimeFormat("en-GB", {
+            hour: "2-digit",   // "12"
+            minute: "2-digit", // "13"
+            second: "2-digit", // "10"
+            hour12: true,       // 12-hour format with AM/PM
+            timeZone: "Pacific/Auckland", // NZ time
+        }).format(date);
+
+        const displayDate = formattedDate.replace(",", ""); // To remove any comma
+        return displayDate;
+    }
+
+
     let eventData;
     if (!loading && events && events.length) {
         eventData = <div className="space-y-2 pt-4 w-full mx-auto">
@@ -136,21 +167,13 @@ export default function ViewEvents() {
                     <span className="absolute bottom-2 left-5 text-md text-primary">
                     {
                       (() => {
-                          const eventTime = new Date(event.time);
-                          const formattedDate = new Intl.DateTimeFormat("en-GB", {
-                              weekday: "short",  // "Mon"
-                              day: "2-digit",    // "23"
-                              month: "2-digit",  // "04"
-                              year: "numeric",   // "2024"
-                              hour: "2-digit",   // "12"
-                              minute: "2-digit", // "13"
-                              second: "2-digit", // "10"
-                              hour12: true,       // 12-hour format with AM/PM
-                              timeZone: "Pacific/Auckland", // NZ time
-                          }).format(eventTime);
-
-                          const displayDate = formattedDate.replace(",", ""); // To remove any comma
-                          return displayDate;
+                          const entryTime = formatDateLong(new Date(event.entryTime));
+                          if (event.exitTime) {
+                            const exitTime = formatDateShort(new Date(event.exitTime));
+                            return `${entryTime} - ${exitTime}`;
+                          }
+                          
+                          return entryTime;
                       })()
                     }
                     </span>
@@ -158,9 +181,12 @@ export default function ViewEvents() {
                     {expandedIndex === index && (
                         <div className="mt-2 text-sm bg-mid p-4 w-100">
                             <p className="font-bold">Card Tech: {event.cardTechnology}</p>
-                            <p>
-                                <span className="font-bold">{"Turnstile: " + event.turnstile}</span>{" "}
-                            </p>
+                            <p className="font-bold">{"Entry turnstile: " + event.entryTurnstile}</p>
+                            {/* <p>
+                                <span className="font-bold">{"Entry turnstile: " + event.entryTurnstile}</span>
+                                {event.exitTurnstile && <span className="font-bold">{"Exit turnstile: " + event.exitTurnstile}</span>}
+                            </p> */}
+                            {event.exitTurnstile && <p className="font-bold">{"Exit turnstile: " + event.exitTurnstile}</p>}
                         </div>
                     )}
                 </div>

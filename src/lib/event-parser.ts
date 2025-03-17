@@ -1,4 +1,4 @@
-import ScanEvent from "@/models/scan-event"; // Import ScanEvent model if necessary
+import ScanEvent2 from "@/models/scan-event-2"; // Import ScanEvent model if necessary
 import { DateTime } from "luxon";
 
 function convertToNZTime(timeStr: string) {
@@ -8,7 +8,7 @@ function convertToNZTime(timeStr: string) {
     return parsedTime.toJSDate(); // Return as a Date object
 }
 
-export function parseEvent(row: Record<string, string>): typeof ScanEvent | null {
+export function parseEvent(row: Record<string, string>): typeof ScanEvent2 | null {
     const timeStr = row["Occurrence Time"];
     const eventStr = row["Event Full Description"]?.replace(/\r/g, "").trim(); // Remove carriage returns and trim spaces
 
@@ -18,13 +18,26 @@ export function parseEvent(row: Record<string, string>): typeof ScanEvent | null
     }
 
     // Parse time
-    const time = convertToNZTime(timeStr)
+    const time = convertToNZTime(timeStr);
+    console.log("parsed time: " + time);
 
     // Extract name using regex
-    const nameMatch = eventStr.match(/^(.+?), (.+?) was granted entry/);
-    if (!nameMatch) {
-        console.log("Skipping row due to malformed name format:", eventStr);
-        return null;
+    const nameMatchEntry = eventStr.match(/^(.+?), (.+?) was granted entry/);
+    let nameMatch = null;
+    let eventType: "entry" | "exit" = "entry";
+    if (nameMatchEntry) {
+        nameMatch = nameMatchEntry;
+        eventType = "entry";
+    } else {
+        // Check if this is an exit event
+        const nameMatchExit = eventStr.match(/^(.+?), (.+?) exited to/);
+        if (!nameMatchExit) {
+            // This was not an exit or an entry event, return
+            console.log("Skipping row due to malformed name format:", eventStr);
+            return null;
+        }
+        nameMatch = nameMatchExit;
+        eventType = "exit";
     }
 
     const lastName = nameMatch[1]; // Last name
@@ -44,10 +57,13 @@ export function parseEvent(row: Record<string, string>): typeof ScanEvent | null
 
     return {
         _id: `${Math.floor(time.getTime() / 1000)}-${cardNumber}`,
-        time,
+        entryTime: eventType === "entry" ? time : undefined,
+        exitTime: eventType === "exit" ? time : undefined,
         name: fullFirstName + " " + lastName,
         cardNumber,
         cardTechnology,
-        turnstile,
+        entryTurnstile: eventType === "entry" ? turnstile : undefined,
+        exitTurnstile: eventType === "exit" ? turnstile : undefined,
+        eventType,
     };
 }

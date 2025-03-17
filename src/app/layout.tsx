@@ -47,7 +47,7 @@ export default function RootLayout({
 
                 <footer className="bg-mid-light text-text p-10 w-full   border-t-4 border-border">
                     <p>© 2025 Naylor Love</p>
-                    <p className={"link"}>tulp.dev</p>
+                    <a className={"link"} href="https://digitulp.co">Digitulp Ltd</a>
                 </footer>
             </div>
         </SessionProvider>

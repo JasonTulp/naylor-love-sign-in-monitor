@@ -1,25 +1,13 @@
 import {NextRequest, NextResponse} from "next/server";
 import { dbConnect } from "@/lib/db-connect";
-import ScanEvent from "@/models/scan-event";
-import { DateTime } from "luxon";
-
-function getNZDateRange(dateStr: string) {
-    // Convert the given date (YYYY-MM-DD) to start/end of the day in NZ time
-    const startOfDayNZ = DateTime.fromISO(dateStr, { zone: "Pacific/Auckland" }).startOf("day");
-    const endOfDayNZ = startOfDayNZ.plus({ days: 1 });
-
-    // Convert both to UTC for database query
-    return {
-        $gte: startOfDayNZ.toUTC().toJSDate(),
-        $lt: endOfDayNZ.toUTC().toJSDate(),
-    };
-}
+import ScanEvent2 from "@/models/scan-event-2";
+import { getNZDateRange } from "@/lib/date-helpers";
 
 export async function GET(req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url);
         const page = parseInt(searchParams.get('page') || '1');
-        const limit = parseInt(searchParams.get('limit') || '25');
+        const limit = parseInt(searchParams.get('limit') || '100');
         const before = searchParams.get('before');
         const after = searchParams.get('after');
         const specificDate = searchParams.get('specificDate');
@@ -35,13 +23,13 @@ export async function GET(req: NextRequest) {
         const query: any = {};
         if (specificDate) {
             // query.time = { $gte: specificDate, $lt: new Date(specificDate).setDate(new Date(specificDate).getDate() + 1) };
-            query.time = getNZDateRange(specificDate);
+            query.entryTime = getNZDateRange(specificDate);
         } else {
             if (before) {
-                query.time = { $lte: before };
+                query.entryTime = { $lte: before };
             }
             if (after) {
-                query.time = { ...query.time, $gte: after };
+                query.entryTime = { ...query.entryTime, $gte: after };
             }
         }
         if (cardNumber) {
@@ -54,7 +42,7 @@ export async function GET(req: NextRequest) {
         }
         if (turnstile) {
             // convert to number
-            query.turnstile = parseInt(turnstile);
+            query.entryTurnstile = parseInt(turnstile);
         }
 
         await dbConnect();
@@ -63,11 +51,10 @@ export async function GET(req: NextRequest) {
         let eventData;
         let totalEvents;
         let totalPages;
-        console.log("unique? " + isUnique + " specificDate? " + specificDate);
 
         if (isUnique && specificDate) {
             console.log("Fetching unique events for " + specificDate);
-            const rawData = await ScanEvent.find(query)
+            const rawData = await ScanEvent2.find(query)
                 .sort({ time: -1 });
             // Filter out duplicates based on `cardNumber` and get the latest
             const seenCardNumbers = new Set();
@@ -82,17 +69,18 @@ export async function GET(req: NextRequest) {
             totalPages = 1;
         } else {
             console.log("Fetching all events for " + specificDate);
-            eventData = await ScanEvent.find(query)
+            eventData = await ScanEvent2.find(query)
                 .sort({ time: -1 })
                 .skip(skip)
                 .limit(limit);
-            totalEvents = await ScanEvent.countDocuments(query);
+            totalEvents = await ScanEvent2.countDocuments(query);
             totalPages = Math.ceil(totalEvents / limit);
         }
 
         // Count the total number of documents to calculate total pages
 
         console.log("Fetched " + eventData.length + " events");
+        // console.log(eventData);
 
         return NextResponse.json({
             success: true,

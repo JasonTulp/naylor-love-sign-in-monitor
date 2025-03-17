@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import csvParser from "csv-parser";
 import { parseEvent } from "@/lib/event-parser";
 import { dbConnect } from "@/lib/db-connect";
-import ScanEvent from "@/models/scan-event";
+import ScanEvent2 from "@/models/scan-event-2";
 import { pipeline } from 'stream/promises';
+import { getNZDateRange } from "@/lib/date-helpers";
+import { DateTime } from "luxon";
 
 export async function POST(req: NextRequest) {
     try {
@@ -16,6 +18,7 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ message: "No file uploaded" }, { status: 400 });
             }
 
+
             // Read the file buffer
             const buffer = Buffer.from(await file.arrayBuffer());
             const events: any[] = [];
@@ -23,13 +26,16 @@ export async function POST(req: NextRequest) {
             const stream = require("stream");
             const readableStream = new stream.PassThrough();
             readableStream.end(buffer);
-
+            let uploadedCount = 0;
+            
             await new Promise((resolve, reject) => {
                 readableStream
                     .pipe(csvParser())
-                    .on("data", (row: Record<string, string>) => {
+                    .on("data", async (row: Record<string, string>) => {
                         const event = parseEvent(row);
-                        if (event) events.push(event);
+                        if (event) {
+                            events.push(event);
+                        }
                     })
                     .on("end", resolve)  // Resolve when the parsing is done
                     .on("error", reject); // Reject on error
@@ -37,22 +43,51 @@ export async function POST(req: NextRequest) {
 
             // Connect to MongoDB
             await dbConnect();
-
-            // Prepare the bulk write operations
-            const bulkOps = events.map(event => ({
-                updateOne: {
-                    filter: { _id: event._id }, // Find by unique identifier (_id)
-                    update: { $set: event }, // Set the fields to be updated
-                    upsert: true, // If the document doesn't exist, it will be inserted
+            for (const event of events) {
+                if (event.eventType === "entry") {
+                    try {
+                        // TODO do we want to search for exit events too? Or just assume events come in order?
+                        await ScanEvent2.updateOne({ _id: event._id }, { $set: event }, { upsert: true });
+                        uploadedCount++;
+                        console.log(`Added entry event: ${event.entryTime} cardNo.: ${event.cardNumber}`);
+                    } catch (error: any) {
+                        console.log(`Error adding entry event: ${event.entryTime} cardNo.: ${event.cardNumber}`);
+                        console.log(error);
+                    }
+                } else {
+                    // find entry event from mongoDB by filtering by date, card number and events without exit time
+                    const query: any = {};
+                    const time = DateTime.fromJSDate(event.exitTime);
+                    const startOfDay = time.startOf("day");
+                    const endOfDay = startOfDay.plus({ days: 1 });
+                    query.entryTime = {
+                        $gte: startOfDay.toUTC().toJSDate(),
+                        $lt: endOfDay.toUTC().toJSDate(),
+                    };
+                    query.cardNumber = event.cardNumber;
+                    query.exitTime = { $exists: false };
+                    try {
+                        const result = await ScanEvent2.updateOne(
+                            query, 
+                            { 
+                                $set: {
+                                    exitTime: event.exitTime,
+                                    exitTurnstile: event.exitTurnstile,
+                                }
+                            }
+                        );
+                        if (result.modifiedCount > 0) {
+                            uploadedCount++;
+                            console.log(`Updated entry event with exit time: ${event.exitTime} cardNo.: ${event.cardNumber}`);
+                        }
+                        else {
+                            console.log(`No entry event found for exit event: ${event.exitTime} cardNo.: ${event.cardNumber} .... Skipping`);
+                        }
+                    }catch (error: any) {
+                        console.log(`Error adding exit event: ${event.entryTime} cardNo.: ${event.cardNumber}`);
+                        console.log(error);
+                    }
                 }
-            }));
-
-            // Perform the bulk operation
-            let uploadedCount = 0;
-            if (bulkOps.length > 0) {
-                const result = await ScanEvent.bulkWrite(bulkOps);
-                uploadedCount = result.upsertedCount;
-                console.log(`Processed ${result.upsertedCount} insertions and ${result.modifiedCount} updates.`);
             }
 
             let message = uploadedCount === 0 ? "No new files uploaded" : `${uploadedCount} files uploaded. Refresh the page to view them`;
