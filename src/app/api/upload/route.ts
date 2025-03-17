@@ -58,38 +58,38 @@ export async function POST(req: NextRequest) {
                         console.log(error);
                     }
                 } else {
-                    // find entry event from mongoDB by filtering by date, card number and events without exit time
-                    const query: any = {};
-                    const time = DateTime.fromJSDate(event.exitTime);
-                    const startOfDay = time.startOf("day");
-                    // const endOfDay = startOfDay.plus({ days: 1 });
-                    query.entryTime = {
-                        $gte: startOfDay.toUTC().toJSDate(),
-                        $lt: time.toUTC().toJSDate(),
-                    };
-                    query.cardNumber = event.cardNumber;
-                    query.exitTime = { $exists: false };
-                    try {
-                        const result = await ScanEvent2.updateOne(
-                            query, 
-                            { 
-                                $set: {
-                                    exitTime: event.exitTime,
-                                    exitTurnstile: event.exitTurnstile,
-                                }
-                            }
-                        );
-                        if (result.modifiedCount > 0) {
-                            uploadedCount++;
-                            console.log(`Updated entry event with exit time: ${event.exitTime} cardNo.: ${event.cardNumber} name: ${event.name}`);
-                        }
-                        else {
-                            console.log(`No entry event found for exit event: ${event.exitTime} cardNo.: ${event.cardNumber} name: ${event.name} .... Skipping`);
-                        }
-                    }catch (error: any) {
-                        console.log(`Error adding exit event: ${event.entryTime} cardNo.: ${event.cardNumber}`);
-                        console.log(error);
-                    }
+                    // // find entry event from mongoDB by filtering by date, card number and events without exit time
+                    // const query: any = {};
+                    // const time = DateTime.fromJSDate(event.exitTime);
+                    // const startOfDay = time.startOf("day");
+                    // // const endOfDay = startOfDay.plus({ days: 1 });
+                    // query.entryTime = {
+                    //     $gte: startOfDay.toUTC().toJSDate(),
+                    //     $lt: time.toUTC().toJSDate(),
+                    // };
+                    // query.cardNumber = event.cardNumber;
+                    // query.exitTime = { $exists: false };
+                    // try {
+                    //     const result = await ScanEvent2.updateOne(
+                    //         query, 
+                    //         { 
+                    //             $set: {
+                    //                 exitTime: event.exitTime,
+                    //                 exitTurnstile: event.exitTurnstile,
+                    //             }
+                    //         }
+                    //     );
+                    //     if (result.modifiedCount > 0) {
+                    //         uploadedCount++;
+                    //         console.log(`Updated entry event with exit time: ${event.exitTime} cardNo.: ${event.cardNumber} name: ${event.name}`);
+                    //     }
+                    //     else {
+                    //         console.log(`No entry event found for exit event: ${event.exitTime} cardNo.: ${event.cardNumber} name: ${event.name} .... Skipping`);
+                    //     }
+                    // }catch (error: any) {
+                    //     console.log(`Error adding exit event: ${event.entryTime} cardNo.: ${event.cardNumber}`);
+                    //     console.log(error);
+                    // }
                 }
             }
 

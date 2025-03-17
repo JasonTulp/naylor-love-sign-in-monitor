@@ -12,6 +12,8 @@ export function parseEvent(row: Record<string, string>): typeof ScanEvent2 | nul
     const timeStr = row["Occurrence Time"];
     const eventStr = row["Event Full Description"]?.replace(/\r/g, "").trim(); // Remove carriage returns and trim spaces
 
+    console.log("PARSING: " + timeStr + " " + eventStr);
+
     if (!timeStr || !eventStr) {
         console.log("Skipping row due to missing data:", row);
         return null;
