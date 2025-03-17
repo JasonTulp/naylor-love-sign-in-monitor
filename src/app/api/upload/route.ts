@@ -52,9 +52,9 @@ export async function POST(req: NextRequest) {
                         // TODO do we want to search for exit events too? Or just assume events come in order?
                         await ScanEvent2.updateOne({ _id: event._id }, { $set: event }, { upsert: true });
                         uploadedCount++;
-                        console.log(`Added entry event: ${event.entryTime} cardNo.: ${event.cardNumber}`);
+                        console.log(`Added entry event: ${event.entryTime} cardNo.: ${event.cardNumber} name: ${event.name}`);
                     } catch (error: any) {
-                        console.log(`Error adding entry event: ${event.entryTime} cardNo.: ${event.cardNumber}`);
+                        console.log(`Error adding entry event: ${event.entryTime} cardNo.: ${event.cardNumber} name: ${event.name}`);
                         console.log(error);
                     }
                 } else {
@@ -81,10 +81,10 @@ export async function POST(req: NextRequest) {
                         );
                         if (result.modifiedCount > 0) {
                             uploadedCount++;
-                            console.log(`Updated entry event with exit time: ${event.exitTime} cardNo.: ${event.cardNumber}`);
+                            console.log(`Updated entry event with exit time: ${event.exitTime} cardNo.: ${event.cardNumber} name: ${event.name}`);
                         }
                         else {
-                            console.log(`No entry event found for exit event: ${event.exitTime} cardNo.: ${event.cardNumber} .... Skipping`);
+                            console.log(`No entry event found for exit event: ${event.exitTime} cardNo.: ${event.cardNumber} name: ${event.name} .... Skipping`);
                         }
                     }catch (error: any) {
                         console.log(`Error adding exit event: ${event.entryTime} cardNo.: ${event.cardNumber}`);

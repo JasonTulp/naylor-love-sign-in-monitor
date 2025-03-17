@@ -19,7 +19,6 @@ export function parseEvent(row: Record<string, string>): typeof ScanEvent2 | nul
 
     // Parse time
     const time = convertToNZTime(timeStr);
-    console.log("parsed time: " + time);
 
     // Extract name using regex
     const nameMatchEntry = eventStr.match(/^(.+?), (.+?) was granted entry/);
