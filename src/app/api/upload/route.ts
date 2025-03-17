@@ -58,11 +58,15 @@ export async function POST(req: NextRequest) {
                         console.log(error);
                     }
                 } else {
-                    // // find entry event from mongoDB by filtering by date, card number and events without exit time
-                    // const query: any = {};
-                    // const time = DateTime.fromJSDate(event.exitTime);
-                    // const startOfDay = time.startOf("day");
-                    // // const endOfDay = startOfDay.plus({ days: 1 });
+                    // find entry event from mongoDB by filtering by date, card number and events without exit time
+                    const query: any = {};
+                    const time = DateTime.fromJSDate(event.exitTime);
+                    const startOfDay = time.startOf("day");
+                    console.log(`Searching for entry event for exit event: ${event.exitTime} cardNo.: ${event.cardNumber} name: ${event.name}`);
+                    console.log("startOfDay: " + startOfDay.toUTC().toJSDate());
+                    console.log("time: " + time.toUTC().toJSDate());
+                    console.log("\n");
+                    // const endOfDay = startOfDay.plus({ days: 1 });
                     // query.entryTime = {
                     //     $gte: startOfDay.toUTC().toJSDate(),
                     //     $lt: time.toUTC().toJSDate(),
