@@ -195,7 +195,7 @@ export default function ViewEvents() {
                                 <span className="font-bold">{"Entry turnstile: " + event.entryTurnstile}</span>
                                 {event.exitTurnstile && <span className="font-bold">{"Exit turnstile: " + event.exitTurnstile}</span>}
                             </p> */}
-                            {event.exitTurnstile && <p className="font-bold">{"Exit turnstile: " + event.exitTurnstile}</p>}
+                            {event.exitTurnstile && event.exitTime > event.entryTime && <p className="font-bold">{"Exit turnstile: " + event.exitTurnstile}</p>}
                             {event.exitTime && event.exitTime > event.entryTime && <p className="font-bold">{"Time on site: " + getTimeDifference(new Date(event.exitTime), new Date(event.entryTime))}</p>}
                         </div>
                     )}
