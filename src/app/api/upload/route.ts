@@ -7,6 +7,9 @@ import { pipeline } from 'stream/promises';
 import { getNZDateRange } from "@/lib/date-helpers";
 import { DateTime } from "luxon";
 
+export const runtime = 'nodejs';
+export const maxDuration = 300; // 5 minutes in seconds
+
 export async function POST(req: NextRequest) {
     try {
         // Ensure it's multipart/form-data before proceeding
@@ -59,10 +62,10 @@ export async function POST(req: NextRequest) {
                     const query: any = {};
                     const time = DateTime.fromJSDate(event.exitTime);
                     const startOfDay = time.startOf("day");
-                    const endOfDay = startOfDay.plus({ days: 1 });
+                    // const endOfDay = startOfDay.plus({ days: 1 });
                     query.entryTime = {
                         $gte: startOfDay.toUTC().toJSDate(),
-                        $lt: endOfDay.toUTC().toJSDate(),
+                        $lt: time.toUTC().toJSDate(),
                     };
                     query.cardNumber = event.cardNumber;
                     query.exitTime = { $exists: false };

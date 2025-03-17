@@ -177,7 +177,7 @@ export default function ViewEvents() {
                     {
                       (() => {
                           const entryTime = formatDateLong(new Date(event.entryTime));
-                          if (event.exitTime) {
+                          if (event.exitTime && event.exitTime > event.entryTime) {
                             const exitTime = formatDateShort(new Date(event.exitTime));
                             return `${entryTime} - ${exitTime}`;
                           }
@@ -196,7 +196,7 @@ export default function ViewEvents() {
                                 {event.exitTurnstile && <span className="font-bold">{"Exit turnstile: " + event.exitTurnstile}</span>}
                             </p> */}
                             {event.exitTurnstile && <p className="font-bold">{"Exit turnstile: " + event.exitTurnstile}</p>}
-                            {event.exitTime && <p className="font-bold">{"Time on site: " + getTimeDifference(new Date(event.exitTime), new Date(event.entryTime))}</p>}
+                            {event.exitTime && event.exitTime > event.entryTime && <p className="font-bold">{"Time on site: " + getTimeDifference(new Date(event.exitTime), new Date(event.entryTime))}</p>}
                         </div>
                     )}
                 </div>
