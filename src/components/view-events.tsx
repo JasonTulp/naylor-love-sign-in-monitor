@@ -123,6 +123,15 @@ export default function ViewEvents() {
     }
 
 
+    const getTimeDifference = (endDate: Date, startDate: Date) => {
+        // Get difference in hours and minutes
+        const difference = endDate.getTime() - startDate.getTime();
+        const hours = Math.floor(difference / (1000 * 60 * 60));
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        return `${hours}hr ${minutes}min`;
+    }
+
+
     let eventData;
     if (!loading && events && events.length) {
         eventData = <div className="space-y-2 pt-4 w-full mx-auto">
@@ -187,6 +196,7 @@ export default function ViewEvents() {
                                 {event.exitTurnstile && <span className="font-bold">{"Exit turnstile: " + event.exitTurnstile}</span>}
                             </p> */}
                             {event.exitTurnstile && <p className="font-bold">{"Exit turnstile: " + event.exitTurnstile}</p>}
+                            {event.exitTime && <p className="font-bold">{"Time on site: " + getTimeDifference(new Date(event.exitTime), new Date(event.entryTime))}</p>}
                         </div>
                     )}
                 </div>
