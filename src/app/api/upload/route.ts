@@ -78,18 +78,19 @@ export async function POST(req: NextRequest) {
                     query.cardNumber = event.cardNumber;
                     query.exitTime = { $exists: false };
                     try {
-                        const result = await ScanEvent2.updateOne(
+                        const result = await ScanEvent2.findOneAndUpdate(
                             query, 
                             { 
                                 $set: {
                                     exitTime: event.exitTime,
                                     exitTurnstile: event.exitTurnstile,
                                 }
-                            }
+                            },
+                            { sort: { entryTime: -1 } }  // Sort by entryTime descending (most recent first)
                         );
-                        if (result.modifiedCount > 0) {
+                        if (result) {
                             uploadedCount++;
-                            console.log(`Updated entry event with exit time: ${event.exitTime} cardNo.: ${event.cardNumber} name: ${event.name}`);
+                            console.log(`Updated entry event ${result.entryTime} with exit time: ${event.exitTime} cardNo.: ${event.cardNumber} name: ${event.name}`);
                         }
                         else {
                             console.log(`No entry event found for exit event: ${event.exitTime} cardNo.: ${event.cardNumber} name: ${event.name} .... Skipping`);
