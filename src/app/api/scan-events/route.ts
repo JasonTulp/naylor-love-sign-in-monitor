@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
         if (isUnique && specificDate) {
             console.log("Fetching unique events for " + specificDate);
             const rawData = await ScanEvent2.find(query)
-                .sort({ time: -1 });
+                .sort({ entryTime: -1 });
             // Filter out duplicates based on `cardNumber` and get the latest
             const seenCardNumbers = new Set();
             eventData = rawData.filter((item: any) => {
@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
         } else {
             console.log("Fetching all events for " + specificDate);
             eventData = await ScanEvent2.find(query)
-                .sort({ time: -1 })
+                .sort({ entryTime: -1 })
                 .skip(skip)
                 .limit(limit);
             totalEvents = await ScanEvent2.countDocuments(query);
