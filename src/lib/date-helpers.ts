@@ -5,8 +5,8 @@ export function getNZDateRange(dateStr: string) {
     const startOfDayNZ = DateTime.fromISO(dateStr, { zone: "Pacific/Auckland" }).startOf("day");
     const endOfDayNZ = startOfDayNZ.plus({ days: 1 });
 
-    console.log("startOfDayNZ: " + startOfDayNZ);
-    console.log("endOfDayNZ: " + endOfDayNZ);
+    console.log("startOfDayNZ: " + startOfDayNZ.toUTC().toJSDate());
+    console.log("endOfDayNZ: " + endOfDayNZ.toUTC().toJSDate());
 
     // Convert both to UTC for database query
     return {
