@@ -47,12 +47,18 @@ export async function POST(req: NextRequest) {
             // Connect to MongoDB
             await dbConnect();
             for (const event of events) {
+                console.log("\n");
                 if (event.eventType === "entry") {
                     try {
-                        // TODO do we want to search for exit events too? Or just assume events come in order?
-                        await ScanEvent2.updateOne({ _id: event._id }, { $set: event }, { upsert: true });
-                        uploadedCount++;
-                        console.log(`Added entry event: ${event.entryTime} cardNo.: ${event.cardNumber} name: ${event.name}`);
+                        // Check if document already exists
+                        const exists = await ScanEvent2.findOne({ _id: event._id });
+                        if (!exists) {
+                            const result = await ScanEvent2.create(event);
+                            uploadedCount++;
+                            console.log(`Added entry event: ${event.entryTime} cardNo.: ${event.cardNumber} name: ${event.name}`);
+                        } else {
+                            console.log(`Entry event already exists: ${event.entryTime} cardNo.: ${event.cardNumber} name: ${event.name}`);
+                        }
                     } catch (error: any) {
                         console.log(`Error adding entry event: ${event.entryTime} cardNo.: ${event.cardNumber} name: ${event.name}`);
                         console.log(error);
@@ -60,40 +66,38 @@ export async function POST(req: NextRequest) {
                 } else {
                     // find entry event from mongoDB by filtering by date, card number and events without exit time
                     const query: any = {};
-                    const time = DateTime.fromJSDate(event.exitTime);
+                    const time = DateTime.fromJSDate(event.exitTime, { zone: "Pacific/Auckland" });
                     const startOfDay = time.startOf("day");
                     console.log(`Searching for entry event for exit event: ${event.exitTime} cardNo.: ${event.cardNumber} name: ${event.name}`);
                     console.log("startOfDay: " + startOfDay.toUTC().toJSDate());
                     console.log("time: " + time.toUTC().toJSDate());
-                    console.log("\n");
-                    // const endOfDay = startOfDay.plus({ days: 1 });
-                    // query.entryTime = {
-                    //     $gte: startOfDay.toUTC().toJSDate(),
-                    //     $lt: time.toUTC().toJSDate(),
-                    // };
-                    // query.cardNumber = event.cardNumber;
-                    // query.exitTime = { $exists: false };
-                    // try {
-                    //     const result = await ScanEvent2.updateOne(
-                    //         query, 
-                    //         { 
-                    //             $set: {
-                    //                 exitTime: event.exitTime,
-                    //                 exitTurnstile: event.exitTurnstile,
-                    //             }
-                    //         }
-                    //     );
-                    //     if (result.modifiedCount > 0) {
-                    //         uploadedCount++;
-                    //         console.log(`Updated entry event with exit time: ${event.exitTime} cardNo.: ${event.cardNumber} name: ${event.name}`);
-                    //     }
-                    //     else {
-                    //         console.log(`No entry event found for exit event: ${event.exitTime} cardNo.: ${event.cardNumber} name: ${event.name} .... Skipping`);
-                    //     }
-                    // }catch (error: any) {
-                    //     console.log(`Error adding exit event: ${event.entryTime} cardNo.: ${event.cardNumber}`);
-                    //     console.log(error);
-                    // }
+                    query.entryTime = {
+                        $gte: startOfDay.toUTC().toJSDate(),
+                        $lt: time.toUTC().toJSDate(),
+                    };
+                    query.cardNumber = event.cardNumber;
+                    query.exitTime = { $exists: false };
+                    try {
+                        const result = await ScanEvent2.updateOne(
+                            query, 
+                            { 
+                                $set: {
+                                    exitTime: event.exitTime,
+                                    exitTurnstile: event.exitTurnstile,
+                                }
+                            }
+                        );
+                        if (result.modifiedCount > 0) {
+                            uploadedCount++;
+                            console.log(`Updated entry event with exit time: ${event.exitTime} cardNo.: ${event.cardNumber} name: ${event.name}`);
+                        }
+                        else {
+                            console.log(`No entry event found for exit event: ${event.exitTime} cardNo.: ${event.cardNumber} name: ${event.name} .... Skipping`);
+                        }
+                    }catch (error: any) {
+                        console.log(`Error adding exit event: ${event.entryTime} cardNo.: ${event.cardNumber}`);
+                        console.log(error);
+                    }
                 }
             }
 
