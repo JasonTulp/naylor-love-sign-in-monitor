@@ -338,8 +338,6 @@ export default function ViewEvents() {
                     </div>
                     <div className="flex flex-col col-span-2">
                         <div className="flex space-x-4 py-2 justify-end mt-4">
-
-                            <h1 className="text-lg text-right">Total: {totalEvents}</h1>
                             {/* Filter Buttons */}
                             <button
                                 onClick={applyFilters}
