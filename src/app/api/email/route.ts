@@ -17,7 +17,11 @@ export async function POST(req: NextRequest) {
         // Log the email data for inspection
         console.log(emailData);
 
-        if (process.env.SENDER_ADDRESS && emailData.from !== process.env.SENDER_ADDRESS) {
+        // Use regex to extract the email address from the From field
+        const fromString = String(formData.get("From"));
+        const fromMatch = fromString.match(/<(.+?)>/);
+        const fromEmail = fromMatch ? fromMatch[1] : fromString;
+        if (process.env.SENDER_ADDRESS && fromEmail !== process.env.SENDER_ADDRESS) {
             console.log("Email from unauthorized sender. Ignoring.");
             return NextResponse.json({ message: "Unauthorized sender" }, { status: 403 });
         }
