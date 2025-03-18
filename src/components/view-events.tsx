@@ -138,15 +138,14 @@ export default function ViewEvents() {
             // Check if the current time is greater than 6.00pm NZTime
             const currentTime = new Date();
             const currentNZTime = new Date(currentTime.toLocaleString("en-US", { timeZone: "Pacific/Auckland" }));
-            const sixPMNZTime = new Date(currentTime.setHours(18, 0, 0, 0));
-            if (currentNZTime > sixPMNZTime) {
             const startNZTime = new Date(startDate.toLocaleString("en-US", { timeZone: "Pacific/Auckland" }));
             const startSixPMNZTime = new Date(startNZTime.setHours(18, 0, 0, 0));
-            const difference = startSixPMNZTime.getTime() - startDate.getTime();
+            if (currentNZTime > startSixPMNZTime) {
+                const difference = startSixPMNZTime.getTime() - startDate.getTime();
                 const hours = Math.floor(difference / (1000 * 60 * 60));
                 const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
                 return (
-                    <p className="font-bold">Time on site: {hours}hr {minutes}min</p>
+                    <p className="font-bold">Time on site: {hours}hr {minutes}min (estimated)</p>
                 );
             }
             return (
@@ -192,7 +191,7 @@ export default function ViewEvents() {
         // Check if the current time is greater than 6.00pm NZTime
         const currentTime = new Date();
         const currentNZTime = new Date(currentTime.toLocaleString("en-US", { timeZone: "Pacific/Auckland" }));
-        const sixPMNZTime = new Date(currentTime.setHours(18, 0, 0, 0));
+        const sixPMNZTime = new Date(entryDate.setHours(18, 0, 0, 0));
         if (currentNZTime > sixPMNZTime) {
             return (
                 <span>
@@ -316,7 +315,10 @@ export default function ViewEvents() {
                         <select
                             id="hasSignedOut"
                             value={hasSignedOut}
-                            onChange={(e) => setHasSignedOut(e.target.value as "yes" | "no" | "either")}
+                            onChange={(e) => {
+                                setHasSignedOut(e.target.value as "yes" | "no" | "either")
+                                setSetFilters(true);
+                            }}
                             className="input h-8 w-full"
                         >
                             <option value="either">...</option>
