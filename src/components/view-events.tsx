@@ -376,7 +376,7 @@ export default function ViewEvents() {
                                 checked:bg-white checked:border-transparent focus:ring-0`}
                     />
                     <p className="text-md ">
-                        De-dupe users? (Date must be selected)
+                        Dedupe users? (Date must be selected)
                     </p>
                 </div>
                 <div className="flex w-[200px] space-x-2">
