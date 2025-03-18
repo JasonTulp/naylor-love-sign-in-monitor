@@ -140,7 +140,7 @@ export default function ViewEvents() {
             const currentNZTime = new Date(currentTime.toLocaleString("en-US", { timeZone: "Pacific/Auckland" }));
             const sixPMNZTime = new Date(currentTime.setHours(18, 0, 0, 0));
             if (currentNZTime > sixPMNZTime) {
-            const startNZTime = new Date(start.toLocaleString("en-US", { timeZone: "Pacific/Auckland" }));
+            const startNZTime = new Date(startDate.toLocaleString("en-US", { timeZone: "Pacific/Auckland" }));
             const startSixPMNZTime = new Date(startNZTime.setHours(18, 0, 0, 0));
             const difference = startSixPMNZTime.getTime() - startDate.getTime();
                 const hours = Math.floor(difference / (1000 * 60 * 60));
