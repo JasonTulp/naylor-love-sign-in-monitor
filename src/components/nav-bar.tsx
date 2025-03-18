@@ -17,6 +17,10 @@ export default function NavBar() {
         await router.push("/add-user");
     }
 
+    const handleUploadCSV = async () => {
+        await router.push("/upload-csv");
+    }
+
     return (
         <nav className="flex flex-col w-full items-center bg-mid-light px-4">
             <div className={"lg:w-3/4 xl:w-1/2 flex w-full justify-between "}>
@@ -35,6 +39,16 @@ export default function NavBar() {
                     {/*/!*</li>*!/*/}
                 </ul>
                 <ul className="flex space-x-4">
+                    {session && session.user?.role === "admin" && (
+                        <li className="p-2 text-xl font-bold">
+                            <button
+                                onClick={handleUploadCSV}
+                                className="hover:underline hover:text-primary"
+                            >
+                                Upload
+                            </button>
+                        </li>
+                    )}
                     {session && session.user?.role === "admin" && (
                         <li className="p-2 text-xl font-bold">
                             <button

@@ -15,6 +15,9 @@ export async function GET(req: NextRequest) {
         const name = searchParams.get("name");
         const turnstile = searchParams.get("turnstile");
         const isUnique = searchParams.get("isUnique") === "true";
+        const hasSignedOut = searchParams.get("hasSignedOut");
+        const sortBy = searchParams.get("sortBy");
+        const sortOrder = searchParams.get("sortOrder");
 
         // Calculate the number of items to skip based on the page
         const skip = (page - 1) * limit;
@@ -40,10 +43,20 @@ export async function GET(req: NextRequest) {
         if (name) {
             query.name = { $regex: name, $options: "i" };
         }
+        // Apply turnstile search
         if (turnstile) {
             // convert to number
             query.entryTurnstile = parseInt(turnstile);
         }
+
+        if (hasSignedOut) {
+            if (hasSignedOut === "yes") {
+                query.exitTime = { $exists: true };
+            } else if (hasSignedOut === "no") {
+                query.exitTime = { $exists: false };
+            }
+        }
+
 
         await dbConnect();
 
@@ -55,7 +68,7 @@ export async function GET(req: NextRequest) {
         if (isUnique && specificDate) {
             console.log("Fetching unique events for " + specificDate);
             const rawData = await ScanEvent2.find(query)
-                .sort({ entryTime: -1 });
+                .sort({ [sortBy?? "entryTime"]: sortOrder === "asc" ? 1 : -1 });
             // Filter out duplicates based on `cardNumber` and get the latest
             const seenCardNumbers = new Set();
             eventData = rawData.filter((item: any) => {
@@ -70,7 +83,7 @@ export async function GET(req: NextRequest) {
         } else {
             console.log("Fetching all events for " + specificDate);
             eventData = await ScanEvent2.find(query)
-                .sort({ entryTime: -1 })
+                .sort({ [sortBy?? "entryTime"]: sortOrder === "asc" ? 1 : -1 })
                 .skip(skip)
                 .limit(limit);
             totalEvents = await ScanEvent2.countDocuments(query);

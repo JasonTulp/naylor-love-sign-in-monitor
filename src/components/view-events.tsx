@@ -16,6 +16,9 @@ export default function ViewEvents() {
     const [cardNumber, setCardNumber] = useState<string>("");
     const [turnstile, setTurnstile] = useState<string>("");
     const [isUnique, setIsUnique] = useState<boolean>(false);
+    const [hasSignedOut, setHasSignedOut] = useState<"yes" | "no" | "either">("either");
+    const [sortBy, setSortBy] = useState<"entryTime" | "exitTime" | "cardNumber" | "name">("entryTime");
+    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
     const [name, setName] = useState<string>("");
     const [setFilters, setSetFilters] = useState(false);
 
@@ -31,7 +34,10 @@ export default function ViewEvents() {
             if (cardNumber) queryParams.cardNumber = cardNumber;
             if (name) queryParams.name = name;
             if (turnstile) queryParams.turnstile = turnstile;
-            if (isUnique) queryParams.isUnique = isUnique? "true" : "false";
+            if (isUnique) queryParams.isUnique = isUnique ? "true" : "false";
+            if (hasSignedOut !== "either") queryParams.hasSignedOut = hasSignedOut;
+            if (sortBy) queryParams.sortBy = sortBy;
+            if (sortOrder) queryParams.sortOrder = sortOrder;
 
             const response = await fetch(`/api/scan-events?${new URLSearchParams(queryParams)}`);
             const data = await response.json();
@@ -62,6 +68,7 @@ export default function ViewEvents() {
         setName("");
         setTurnstile("");
         setIsUnique(false);
+        setHasSignedOut("either");
         setCurrentPage(1);
         setSetFilters(true);
     };
@@ -123,13 +130,80 @@ export default function ViewEvents() {
     }
 
 
-    const getTimeDifference = (endDate: Date, startDate: Date) => {
+    const getTimeDifference = (end: string | null, start: string) => {
+        const startDate = new Date(start);
+
+        if (!end) {
+            // No exit time exists
+            // Check if the current time is greater than 6.00pm NZTime
+            const currentTime = new Date();
+            const currentNZTime = new Date(currentTime.toLocaleString("en-US", { timeZone: "Pacific/Auckland" }));
+            const sixPMNZTime = new Date(currentTime.setHours(18, 0, 0, 0));
+            if (currentNZTime > sixPMNZTime) {
+            const startNZTime = new Date(start.toLocaleString("en-US", { timeZone: "Pacific/Auckland" }));
+            const startSixPMNZTime = new Date(startNZTime.setHours(18, 0, 0, 0));
+            const difference = startSixPMNZTime.getTime() - startDate.getTime();
+                const hours = Math.floor(difference / (1000 * 60 * 60));
+                const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+                return (
+                    <p className="font-bold">Time on site: {hours}hr {minutes}min</p>
+                );
+            }
+            return (
+                <p className="font-bold">Still on site</p>
+            )
+        }
         // Get difference in hours and minutes
+        const endDate = new Date(end);
         const difference = endDate.getTime() - startDate.getTime();
         const hours = Math.floor(difference / (1000 * 60 * 60));
         const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-        return `${hours}hr ${minutes}min`;
+
+        return (
+            <p className="font-bold">Time on site: {hours}hr {minutes}min</p>
+        )
     }
+
+    const getExitTurnstile = (exitTurnstile: string | null) => {
+        if (!exitTurnstile) {
+            return (
+                <p className="font-bold">Exit turnstile: N/A</p>
+            )
+        }
+        return (
+            <p className="font-bold">Exit turnstile: {exitTurnstile}</p>
+        )
+    }
+
+    const getTimeString = (entry: string, exit: string | null) => {
+        const entryDate = new Date(entry);
+        const entryTime = formatDateLong(entryDate);
+
+        // An exit time exists and is greater than the entry time
+        if (exit) {
+            const exitDate = new Date(exit);
+            const exitTime = formatDateShort(exitDate);
+            if (entryDate.getTime() <= exitDate.getTime()) {
+                return (`${entryTime} - ${exitTime}`);
+            }
+        }
+
+        // No exit time exists
+        // Check if the current time is greater than 6.00pm NZTime
+        const currentTime = new Date();
+        const currentNZTime = new Date(currentTime.toLocaleString("en-US", { timeZone: "Pacific/Auckland" }));
+        const sixPMNZTime = new Date(currentTime.setHours(18, 0, 0, 0));
+        if (currentNZTime > sixPMNZTime) {
+            return (
+                <span>
+                    {entryTime} - <span className="text-amber-500">6:00:00 pm</span>
+                </span>
+            );
+        }
+
+        return entryTime;
+    }
+
 
 
     let eventData;
@@ -152,10 +226,10 @@ export default function ViewEvents() {
                     <span
                         className="absolute top-2 left-5 text-xl font-bold capitalize transition-colors duration-200 hover:text-primary"
                         onClick={(e) => {
-                        e.stopPropagation(); // Prevents expanding the card
-                        setCardNumber(event.cardNumber);
-                        setSetFilters(true);
-                    }}
+                            e.stopPropagation(); // Prevents expanding the card
+                            setCardNumber(event.cardNumber);
+                            setSetFilters(true);
+                        }}
                         >
                         {event.name}
                     </span>
@@ -174,29 +248,15 @@ export default function ViewEvents() {
 
                     {/* Bottom Left: Time/ Date */}
                     <span className="absolute bottom-2 left-5 text-md text-primary">
-                    {
-                      (() => {
-                          const entryTime = formatDateLong(new Date(event.entryTime));
-                          if (event.exitTime && event.exitTime > event.entryTime) {
-                            const exitTime = formatDateShort(new Date(event.exitTime));
-                            return `${entryTime} - ${exitTime}`;
-                          }
-                          
-                          return entryTime;
-                      })()
-                    }
+                    { getTimeString(event.entryTime, event.exitTime)}
                     </span>
                     {/* Expanded Section */}
                     {expandedIndex === index && (
                         <div className="mt-2 text-sm bg-mid p-4 w-100">
                             <p className="font-bold">Card Tech: {event.cardTechnology}</p>
                             <p className="font-bold">{"Entry turnstile: " + event.entryTurnstile}</p>
-                            {/* <p>
-                                <span className="font-bold">{"Entry turnstile: " + event.entryTurnstile}</span>
-                                {event.exitTurnstile && <span className="font-bold">{"Exit turnstile: " + event.exitTurnstile}</span>}
-                            </p> */}
-                            {event.exitTurnstile && event.exitTime > event.entryTime && <p className="font-bold">{"Exit turnstile: " + event.exitTurnstile}</p>}
-                            {event.exitTime && event.exitTime > event.entryTime && <p className="font-bold">{"Time on site: " + getTimeDifference(new Date(event.exitTime), new Date(event.entryTime))}</p>}
+                            {getExitTurnstile(event.exitTurnstile)}
+                            {getTimeDifference(event.exitTime, event.entryTime)}
                         </div>
                     )}
                 </div>
@@ -212,10 +272,10 @@ export default function ViewEvents() {
 
     return (
         <div className="w-full" >
-            <div className={"p-2"}>
+            <div className={"p-0"}>
                 {/* Date Filter Section */}
                 <div className="grid grid-cols-2 sm:grid-cols-4  gap-x-2 gap-y-1 py-2 w-full">
-                    <div className="flex flex-col col-span-2">
+                    <div className="flex flex-col col-span-1">
                         <label htmlFor="specificDate" className="block">Date</label>
                         <input
                             type="date"
@@ -226,40 +286,7 @@ export default function ViewEvents() {
                             className="input h-8 w-full"
                         />
                     </div>
-                    {/*<div className="flex flex-col col-span-2">*/}
-                    {/*    <label htmlFor="afterDate" className="block">After</label>*/}
-                    {/*    <input*/}
-                    {/*        type="datetime-local"*/}
-                    {/*        id="afterDate"*/}
-                    {/*        value={afterDate}*/}
-                    {/*        onChange={(e) => setAfterDate(e.target.value)}*/}
-                    {/*        onKeyDown={(e) => e.key === "Enter" && applyFilters()}*/}
-                    {/*        className="input h-8 w-full"*/}
-                    {/*    />*/}
                     {/*</div>*/}
-                    {/*<div className="flex flex-col col-span-2">*/}
-                    {/*    <label htmlFor="beforeDate" className="block">Before</label>*/}
-                    {/*    <input*/}
-                    {/*        type="datetime-local"*/}
-                    {/*        id="beforeDate"*/}
-                    {/*        value={beforeDate}*/}
-                    {/*        onChange={(e) => setBeforeDate(e.target.value)}*/}
-                    {/*        onKeyDown={(e) => e.key === "Enter" && applyFilters()}*/}
-                    {/*        className="input h-8 w-full"*/}
-                    {/*    />*/}
-                    {/*</div>*/}
-                    <div className="flex flex-col col-span-2">
-                        <label htmlFor="name" className="block">Name</label>
-                        <input
-                            type="text"
-                            id="name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && applyFilters()}
-                            className="input h-8 w-full"
-                            placeholder="Enter Name"
-                        />
-                    </div>
                     <div className="flex flex-col">
                         <label htmlFor="cardNumber" className="block">Card No.</label>
                         <input
@@ -284,6 +311,31 @@ export default function ViewEvents() {
                             placeholder="Enter Turnstile"
                         />
                     </div>
+                    <div className="flex flex-col">
+                        <label htmlFor="hasSignedOut" className="block">Signed Out</label>
+                        <select
+                            id="hasSignedOut"
+                            value={hasSignedOut}
+                            onChange={(e) => setHasSignedOut(e.target.value as "yes" | "no" | "either")}
+                            className="input h-8 w-full"
+                        >
+                            <option value="either">...</option>
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                        </select>
+                    </div>
+                    <div className="flex flex-col col-span-2">
+                        <label htmlFor="name" className="block">Name</label>
+                        <input
+                            type="text"
+                            id="name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && applyFilters()}
+                            className="input h-8 w-full"
+                            placeholder="Enter Name"
+                        />
+                    </div>
                     <div className="flex flex-col col-span-2">
                         <div className="flex space-x-4 py-2 justify-end mt-4">
 
@@ -306,21 +358,51 @@ export default function ViewEvents() {
                 </div>
 
             </div>
+
+
             <HorizontalRule />
 
-            <div className="flex space-x-4 justify-center items-center panel">
-                <p className="text-md ">
-                    Would you like to limit results to show only the latest entry for each user?
-                </p>
-                <input
-                    type="checkbox"
-                    id="uniqueEntries"
-                    checked={isUnique}
-                    onChange={(e) => setIsUnique(e.target.checked)}  // Update the state
-                    className={`h-6 w-6 border-2 rounded-md transition-all duration-300
-                            ${isUnique ? 'bg-green-500 border-green-700' : 'bg-red-500 border-red-700'} 
-                            checked:bg-white checked:border-transparent focus:ring-0`}
-                />
+            <div className="flex justify-between items-center w-full">
+                <h1 className="text-lg">Total Results: {totalEvents}</h1>
+                <div className="flex space-x-4 justify-center items-center">
+                    
+                    <input
+                        type="checkbox"
+                        id="uniqueEntries"
+                        checked={isUnique}
+                        onChange={(e) => setIsUnique(e.target.checked)}
+                        className={`h-6 w-6 border-2 rounded-md transition-all duration-300
+                                ${isUnique ? 'bg-green-500 border-green-700' : 'bg-gray-700 border-gray-800'} 
+                                checked:bg-white checked:border-transparent focus:ring-0`}
+                    />
+                    <p className="text-md ">
+                        De-dupe users? (Date must be selected)
+                    </p>
+                </div>
+                <div className="flex w-[200px] space-x-2">
+                    <select
+                        value={sortBy}
+                        onChange={(e) => {
+                            setSortBy(e.target.value as "entryTime" | "exitTime" | "cardNumber" | "name")
+                            setSetFilters(true);
+                        }}
+                        className="input h-8 w-full"
+                    >
+                        <option value="entryTime">Entry Time</option>
+                        <option value="exitTime">Exit Time</option>
+                        <option value="cardNumber">Card Number</option>
+                        <option value="name">Name</option>
+                    </select>
+                    <button
+                        onClick={() => {
+                            setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+                            setSetFilters(true);
+                        }}
+                        className="px-2 bg-primary rounded-md hover:bg-primary/80"
+                    >
+                        {sortOrder === "asc" ? "↑" : "↓"}
+                    </button>
+                </div>
             </div>
 
             {loading ? (<Spinner />) : eventData}
