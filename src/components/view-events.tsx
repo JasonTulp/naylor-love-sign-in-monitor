@@ -246,7 +246,7 @@ export default function ViewEvents() {
                     </span>
 
                     {/* Bottom Left: Time/ Date */}
-                    <span className="absolute bottom-2 left-5 text-md text-primary">
+                    <span className="absolute bottom-2 left-5 text-sm md:text-md text-primary">
                     { getTimeString(event.entryTime, event.exitTime)}
                     </span>
                     {/* Expanded Section */}
@@ -362,8 +362,12 @@ export default function ViewEvents() {
 
             <HorizontalRule />
 
-            <div className="flex justify-between items-center w-full">
-                <h1 className="text-lg">Total Results: {totalEvents}</h1>
+            <div className="flex justify-between space-x-2 items-center w-full text-sm sm:text-md lg:text-lg">
+                <h1>
+                    <span className="hidden md:inline">Total Results: </span>
+                    <span className="md:hidden">Total: </span>
+                    {totalEvents}
+                </h1>
                 <div className="flex space-x-4 justify-center items-center">
                     
                     <input
@@ -375,8 +379,9 @@ export default function ViewEvents() {
                                 ${isUnique ? 'bg-green-500 border-green-700' : 'bg-gray-700 border-gray-800'} 
                                 checked:bg-white checked:border-transparent focus:ring-0`}
                     />
-                    <p className="text-md ">
-                        Dedupe users? (Date must be selected)
+                    <p>
+                        <span className="hidden md:inline">Dedupe users? (Date must be selected)</span>
+                        <span className="md:hidden">Dedupe? </span>
                     </p>
                 </div>
                 <div className="flex w-[200px] space-x-2">
