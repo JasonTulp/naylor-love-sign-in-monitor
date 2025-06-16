@@ -12,7 +12,6 @@ interface ScanEvent {
 interface ExportOptions {
     beforeDate?: string;
     afterDate?: string;
-    specificDate?: string;
     cardNumber?: string;
     name?: string;
     turnstile?: string;
@@ -101,7 +100,7 @@ export const exportEventsToCSV = async (options: ExportOptions): Promise<void> =
         // Add all non-undefined options to query params
         Object.entries(options).forEach(([key, value]) => {
             if (value !== undefined) {
-                if (key === 'beforeDate' || key === 'afterDate' || key === 'specificDate') {
+                if (key === 'beforeDate' || key === 'afterDate') {
                     if (value) {
                         queryParams[key] = new Date(value).toISOString();
                     }

@@ -192,7 +192,6 @@ export default function ViewEvents() {
             await exportEventsToCSV({
                 beforeDate,
                 afterDate,
-                specificDate,
                 cardNumber,
                 name,
                 turnstile,
@@ -214,7 +213,6 @@ export default function ViewEvents() {
             await exportEventsToPDF({
                 beforeDate,
                 afterDate,
-                specificDate,
                 cardNumber,
                 name,
                 turnstile,
