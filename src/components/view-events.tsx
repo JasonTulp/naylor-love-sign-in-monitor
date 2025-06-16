@@ -298,7 +298,7 @@ export default function ViewEvents() {
                 {/* Date Filter Section */}
                 <div className="grid grid-cols-2 sm:grid-cols-4  gap-x-2 gap-y-1 py-2 w-full">
                     <div className="flex flex-col">
-                        <label htmlFor="beforeDate" className="block">Before Date</label>
+                        <label htmlFor="beforeDate" className="block">Start Date</label>
                         <input
                             type="date"
                             id="beforeDate"
@@ -317,7 +317,7 @@ export default function ViewEvents() {
                         />
                     </div>
                     <div className="flex flex-col">
-                        <label htmlFor="afterDate" className="block">After Date</label>
+                        <label htmlFor="afterDate" className="block">End Date</label>
                         <input
                             type="date"
                             id="afterDate"
@@ -483,6 +483,7 @@ export default function ViewEvents() {
             ) : null}
 
             {/* Export Section */}
+            {!loading && events && events.length > 0 ? (
             <div className="mt-8 border-t border-gray-700 pt-4">
                 <p className="text-sm text-gray-400 mb-4">
                     Export the currently filtered data to CSV or PDF format. The export will include all matching records, not just the current page.
@@ -502,6 +503,7 @@ export default function ViewEvents() {
                     </button>
                 </div>
             </div>
+            ) : null}
 
         </div>
     );;
