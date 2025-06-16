@@ -1,6 +1,8 @@
 import {useEffect, useState} from "react";
 import Spinner from "@/components/spinner";
 import HorizontalRule from "@/components/horizontal-rule";
+import { exportEventsToCSV } from "@/lib/csv-export";
+import { exportEventsToPDF } from "@/lib/pdf-export";
 
 export default function ViewEvents() {
     const [events, setEvents] = useState<any[]>([]);
@@ -203,7 +205,49 @@ export default function ViewEvents() {
         return entryTime;
     }
 
+    const handleCSVExport = async () => {
+        try {
+            setLoading(true);
+            await exportEventsToCSV({
+                beforeDate,
+                afterDate,
+                specificDate,
+                cardNumber,
+                name,
+                turnstile,
+                isUnique,
+                hasSignedOut,
+                sortBy,
+                sortOrder
+            });
+        } catch (error) {
+            alert(error instanceof Error ? error.message : 'Failed to export CSV. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    const handlePDFExport = async () => {
+        try {
+            setLoading(true);
+            await exportEventsToPDF({
+                beforeDate,
+                afterDate,
+                specificDate,
+                cardNumber,
+                name,
+                turnstile,
+                isUnique,
+                hasSignedOut,
+                sortBy,
+                sortOrder
+            });
+        } catch (error) {
+            alert(error instanceof Error ? error.message : 'Failed to export PDF. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     let eventData;
     if (!loading && events && events.length) {
@@ -275,10 +319,10 @@ export default function ViewEvents() {
                 {/* Date Filter Section */}
                 <div className="grid grid-cols-2 sm:grid-cols-4  gap-x-2 gap-y-1 py-2 w-full">
                     <div className="flex flex-col col-span-1">
-                        <label htmlFor="specificDate" className="block">Date</label>
+                        <label htmlFor="startDate" className="block">Start Date</label>
                         <input
                             type="date"
-                            id="afterDate"
+                            id="startDate"
                             value={specificDate}
                             onChange={(e) => setSpecificDate(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && applyFilters()}
@@ -418,7 +462,7 @@ export default function ViewEvents() {
                 <button
                     onClick={() => setCurrentPage(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className="font-bold px-4 py-2 bg-primary text-black rounded disabled:bg-transparent disabled:text-transparent"
+                    className="font-bold px-4 py-2 bg-primary hover:bg-primary/80 text-black rounded disabled:bg-transparent disabled:text-transparent"
                 >
                     Previous
                 </button>
@@ -426,12 +470,33 @@ export default function ViewEvents() {
                 <button
                     onClick={() => setCurrentPage(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className="font-bold px-4 py-2 bg-primary text-black rounded disabled:bg-gray-300 disabled:bg-transparent disabled:text-transparent "
+                    className="font-bold px-4 py-2 bg-primary hover:bg-primary/80 text-black rounded disabled:bg-gray-300 disabled:bg-transparent disabled:text-transparent "
                 >
                     Next
                 </button>
             </div>
             ) : null}
+
+            {/* Export Section */}
+            <div className="mt-8 border-t border-gray-700 pt-4">
+                <p className="text-sm text-gray-400 mb-4">
+                    Export the currently filtered data to CSV or PDF format. The export will include all matching records, not just the current page.
+                </p>
+                <div className="flex space-x-4">
+                    <button
+                        onClick={handleCSVExport}
+                        className="font-bold bg-primary hover:bg-primary/80 text-black px-6 py-2 rounded shadow-md shadow-dark transition-colors duration-200"
+                    >
+                        Export CSV
+                    </button>
+                    <button
+                        onClick={handlePDFExport}
+                        className="font-bold bg-primary hover:bg-primary/80 text-black px-6 py-2 rounded shadow-md shadow-dark transition-colors duration-200"
+                    >
+                        Export PDF
+                    </button>
+                </div>
+            </div>
 
         </div>
     );;
