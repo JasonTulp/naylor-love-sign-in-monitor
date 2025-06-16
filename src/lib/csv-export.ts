@@ -1,3 +1,5 @@
+import { calculateTimeDifference } from "./time-utils";
+
 interface ScanEvent {
     name: string;
     cardNumber: string;
@@ -36,21 +38,6 @@ const formatDateLong = (date: Date): string => {
     return formattedDate.replace(",", ""); // Remove any comma
 };
 
-const calculateTimeOnSite = (entryTime: string, exitTime: string | null): { hours: number; minutes: number } => {
-    const entry = new Date(entryTime);
-    const exit = exitTime ? new Date(exitTime) : null;
-    
-    if (!exit) {
-        return { hours: 0, minutes: 0 };
-    }
-
-    const diffMs = exit.getTime() - entry.getTime();
-    const hours = Math.floor(diffMs / (1000 * 60 * 60));
-    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-    
-    return { hours, minutes };
-};
-
 const convertEventsToCSV = (events: ScanEvent[]): string => {
     const headers = [
         'Name',
@@ -65,7 +52,7 @@ const convertEventsToCSV = (events: ScanEvent[]): string => {
 
     const csvRows = events.map(event => {
         const entryTime = new Date(event.entryTime);
-        const { hours, minutes } = calculateTimeOnSite(event.entryTime, event.exitTime);
+        const { hours, minutes } = calculateTimeDifference(event.entryTime, event.exitTime);
 
         // Only wrap date fields in quotes since they contain commas
         const row = [

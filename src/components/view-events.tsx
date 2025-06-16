@@ -3,6 +3,7 @@ import Spinner from "@/components/spinner";
 import HorizontalRule from "@/components/horizontal-rule";
 import { exportEventsToCSV } from "@/lib/csv-export";
 import { exportEventsToPDF } from "@/lib/pdf-export";
+import { calculateTimeDifference } from "@/lib/time-utils";
 
 export default function ViewEvents() {
     const [events, setEvents] = useState<any[]>([]);
@@ -30,9 +31,9 @@ export default function ViewEvents() {
                 page: currentPage,
                 limit: 50,
             };
-            if (beforeDate) queryParams.before = new Date(beforeDate).toISOString();
-            if (afterDate) queryParams.after = new Date(afterDate).toISOString();
-            if (specificDate) queryParams.specificDate = new Date(specificDate).toISOString();
+            if (beforeDate) queryParams.beforeDate = new Date(beforeDate).toISOString();
+            if (afterDate) queryParams.afterDate = new Date(afterDate).toISOString();
+            // if (specificDate) queryParams.specificDate = new Date(specificDate).toISOString();
             if (cardNumber) queryParams.cardNumber = cardNumber;
             if (name) queryParams.name = name;
             if (turnstile) queryParams.turnstile = turnstile;
@@ -133,36 +134,16 @@ export default function ViewEvents() {
 
 
     const getTimeDifference = (end: string | null, start: string) => {
-        const startDate = new Date(start);
-
-        if (!end) {
-            // No exit time exists
-            // Check if the current time is greater than 6.00pm NZTime
-            const currentTime = new Date();
-            const currentNZTime = new Date(currentTime.toLocaleString("en-US", { timeZone: "Pacific/Auckland" }));
-            const startNZTime = new Date(startDate.toLocaleString("en-US", { timeZone: "Pacific/Auckland" }));
-            const startSixPMNZTime = new Date(startNZTime.setHours(18, 0, 0, 0));
-            if (currentNZTime > startSixPMNZTime) {
-                const difference = startSixPMNZTime.getTime() - startDate.getTime();
-                const hours = Math.floor(difference / (1000 * 60 * 60));
-                const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-                return (
-                    <p className="font-bold">Time on site: {hours}hr {minutes}min (estimated)</p>
-                );
+        const { hours, minutes, isEstimated } = calculateTimeDifference(start, end);
+        
+        if (isEstimated) {
+            if (hours === 0 && minutes === 0) {
+                return <p className="font-bold">Still on site</p>;
             }
-            return (
-                <p className="font-bold">Still on site</p>
-            )
+            return <p className="font-bold">Time on site: {hours}hr {minutes}min (estimated)</p>;
         }
-        // Get difference in hours and minutes
-        const endDate = new Date(end);
-        const difference = endDate.getTime() - startDate.getTime();
-        const hours = Math.floor(difference / (1000 * 60 * 60));
-        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-
-        return (
-            <p className="font-bold">Time on site: {hours}hr {minutes}min</p>
-        )
+        
+        return <p className="font-bold">Time on site: {hours}hr {minutes}min</p>;
     }
 
     const getExitTurnstile = (exitTurnstile: string | null) => {
@@ -270,7 +251,7 @@ export default function ViewEvents() {
                         className="absolute top-2 left-5 text-xl font-bold capitalize transition-colors duration-200 hover:text-primary"
                         onClick={(e) => {
                             e.stopPropagation(); // Prevents expanding the card
-                            setCardNumber(event.cardNumber);
+                            setName(event.name);
                             setSetFilters(true);
                         }}
                         >
@@ -318,28 +299,42 @@ export default function ViewEvents() {
             <div className={"p-0"}>
                 {/* Date Filter Section */}
                 <div className="grid grid-cols-2 sm:grid-cols-4  gap-x-2 gap-y-1 py-2 w-full">
-                    <div className="flex flex-col col-span-1">
-                        <label htmlFor="startDate" className="block">Start Date</label>
+                    <div className="flex flex-col">
+                        <label htmlFor="beforeDate" className="block">Before Date</label>
                         <input
                             type="date"
-                            id="startDate"
-                            value={specificDate}
-                            onChange={(e) => setSpecificDate(e.target.value)}
+                            id="beforeDate"
+                            value={beforeDate}
+                            onChange={(e) => {
+                                const newBeforeDate = e.target.value;
+                                setBeforeDate(newBeforeDate);
+                                // If afterDate is not set or is less than/equal to new beforeDate, update it
+                                if (!afterDate || new Date(afterDate) <= new Date(newBeforeDate)) {
+                                    setAfterDate(newBeforeDate);
+                                }
+                                setSetFilters(true);
+                            }}
                             onKeyDown={(e) => e.key === "Enter" && applyFilters()}
                             className="input h-8 w-full"
                         />
                     </div>
-                    {/*</div>*/}
                     <div className="flex flex-col">
-                        <label htmlFor="cardNumber" className="block">Card No.</label>
+                        <label htmlFor="afterDate" className="block">After Date</label>
                         <input
-                            type="number"
-                            id="cardNumber"
-                            value={cardNumber}
-                            onChange={(e) => setCardNumber(e.target.value)}
+                            type="date"
+                            id="afterDate"
+                            value={afterDate}
+                            onChange={(e) => {
+                                const newAfterDate = e.target.value;
+                                setAfterDate(newAfterDate);
+                                // If beforeDate is not set or is greater than new afterDate, update it
+                                if (!beforeDate || new Date(beforeDate) >= new Date(newAfterDate)) {
+                                    setBeforeDate(newAfterDate);
+                                }
+                                setSetFilters(true);
+                            }}
                             onKeyDown={(e) => e.key === "Enter" && applyFilters()}
                             className="input h-8 w-full"
-                            placeholder="Enter Card No."
                         />
                     </div>
                     <div className="flex flex-col">
@@ -370,6 +365,18 @@ export default function ViewEvents() {
                             <option value="no">No</option>
                         </select>
                     </div>
+                    <div className="flex flex-col">
+                        <label htmlFor="cardNumber" className="block">Card No.</label>
+                        <input
+                            type="number"
+                            id="cardNumber"
+                            value={cardNumber}
+                            onChange={(e) => setCardNumber(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && applyFilters()}
+                            className="input h-8 w-full"
+                            placeholder="Enter Card No."
+                        />
+                    </div>
                     <div className="flex flex-col col-span-2">
                         <label htmlFor="name" className="block">Name</label>
                         <input
@@ -382,7 +389,7 @@ export default function ViewEvents() {
                             placeholder="Enter Name"
                         />
                     </div>
-                    <div className="flex flex-col col-span-2">
+                    <div className="flex flex-col col-span-1">
                         <div className="flex space-x-4 py-2 justify-end mt-4">
                             {/* Filter Buttons */}
                             <button

@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { calculateTimeDifference } from "./time-utils";
 
 interface ScanEvent {
     name: string;
@@ -13,7 +14,6 @@ interface ScanEvent {
 interface ExportOptions {
     beforeDate?: string;
     afterDate?: string;
-    specificDate?: string;
     cardNumber?: string;
     name?: string;
     turnstile?: string;
@@ -39,20 +39,16 @@ const formatDateLong = (date: Date): string => {
     return formattedDate.replace(",", ""); // Remove any comma
 };
 
-const calculateTimeOnSite = (entryTime: string, exitTime: string | null): { hours: number; minutes: number } => {
-    const entry = new Date(entryTime);
-    const exit = exitTime ? new Date(exitTime) : null;
-    
-    if (!exit) {
-        return { hours: 0, minutes: 0 };
-    }
+const formatDateShort = (date: Date): string => {
+    const formattedDate = new Intl.DateTimeFormat("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        timeZone: "Pacific/Auckland", // NZ time
+    }).format(date);
 
-    const diffMs = exit.getTime() - entry.getTime();
-    const hours = Math.floor(diffMs / (1000 * 60 * 60));
-    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-    
-    return { hours, minutes };
-};
+    return formattedDate.replace(",", ""); // Remove any comma
+}
 
 // Helper to fetch image as data URL
 const fetchImageAsDataURL = async (url: string): Promise<string> => {
@@ -87,6 +83,7 @@ export const exportEventsToPDF = async (options: ExportOptions): Promise<void> =
                 }
             }
         });
+        console.log(queryParams);
 
         const response = await fetch(`/api/scan-events?${new URLSearchParams(queryParams)}`);
         if (!response.ok) {
@@ -106,40 +103,63 @@ export const exportEventsToPDF = async (options: ExportOptions): Promise<void> =
         // Add title
         doc.setFontSize(20);
         doc.setFont('helvetica', 'bold');
-        doc.text('F&P Turnstile Sign-In Report', 14, 15);
+        doc.text('F&P Turnstile Sign-In Report', 14, 24);
+        // Add horizontal line under title
+        doc.setDrawColor(0, 0, 0); // Match the table header color
+        doc.line(14, 28, pageWidth - 14, 28); // Draw line from left margin to right margin
         doc.setFont('helvetica', 'normal');
+        
         
         // Add date range if specified
         doc.setFontSize(10);
-        let yPos = 25;
-        if (options.specificDate) {
-            doc.text(`Date: ${new Date(options.specificDate).toLocaleDateString()}`, 14, yPos);
-            yPos += 7;
-        } else if (options.afterDate || options.beforeDate) {
-            if (options.afterDate) {
-                doc.text(`From: ${new Date(options.afterDate).toLocaleDateString()}`, 14, yPos);
-                yPos += 7;
-            }
-            if (options.beforeDate) {
-                doc.text(`To: ${new Date(options.beforeDate).toLocaleDateString()}`, 14, yPos);
-                yPos += 7;
-            }
-        }
+        let yPos = 34;
+        const xOffset = 5;
 
         if (options.name) {
-            doc.text(`${options.name}`, 14, yPos);
-            yPos += 7;
+            doc.text(`${options.name}`, 14 + xOffset, yPos);
+            yPos += 5;
         }
         if (options.cardNumber) {
-            doc.text(`Card Number: ${options.cardNumber}`, 14, yPos);
-            yPos += 7;
+            doc.text(`Card Number: ${options.cardNumber}`, 14 + xOffset, yPos);
+            yPos += 5;
         }
+        let dateString = "";
+        if (options.afterDate && options.beforeDate && options.afterDate === options.beforeDate) {
+            dateString = formatDateShort(new Date(options.afterDate));
+            doc.text(`Date: ${dateString}`, 14 + xOffset, yPos);
+            yPos += 5;
+        } else if (options.afterDate || options.beforeDate) {
+            let beforeDateString;
+            let afterDateString;
+            if (options.beforeDate) {
+                beforeDateString = formatDateShort(new Date(options.beforeDate));
+                doc.text(`From: ${beforeDateString}`, 14 + xOffset, yPos);
+                yPos += 5;
+            }
+            if (options.afterDate) {
+                afterDateString = formatDateShort(new Date(options.afterDate));
+                doc.text(`To: ${afterDateString}`, 14 + xOffset, yPos);
+                yPos += 5;
+            }
 
+            if (beforeDateString && afterDateString) {
+                dateString = `${beforeDateString}-${afterDateString}`;
+            } else if (beforeDateString) {
+                dateString = `before-${beforeDateString}`;
+            } else if (afterDateString) {
+                dateString = `after-${afterDateString}`;
+            }
+        }
+        console.log("Date string: " + dateString);
+
+
+        let totalTimeOnSite = 0;
 
         // Prepare table data
         const tableData = events.map(event => {
             const entryTime = new Date(event.entryTime);
-            const { hours, minutes } = calculateTimeOnSite(event.entryTime, event.exitTime);
+            const { hours, minutes } = calculateTimeDifference(event.entryTime, event.exitTime);
+            totalTimeOnSite += hours * 60 + minutes;
             
             return [
                 event.name,
@@ -148,13 +168,16 @@ export const exportEventsToPDF = async (options: ExportOptions): Promise<void> =
                 event.entryTurnstile,
                 event.exitTime ? formatDateLong(new Date(event.exitTime)) : 'N/A',
                 event.exitTurnstile || 'N/A',
-                `${hours}hr ${minutes}min`
+                `${hours}:${minutes}`
             ];
         });
 
+        doc.text(`Total Time on Site: ${Math.floor(totalTimeOnSite / 60)} hr ${totalTimeOnSite % 60 }min`, 14 + xOffset, yPos);
+        yPos += 7;
+
         // Add table using autoTable
         autoTable(doc, {
-            startY: yPos + 5,
+            startY: yPos,
             head: [['Name', 'Card Number', 'Entry Time', 'Entry Turnstile', 'Exit Time', 'Exit Turnstile', 'Time on Site']],
             body: tableData,
             theme: 'grid',
@@ -201,7 +224,13 @@ export const exportEventsToPDF = async (options: ExportOptions): Promise<void> =
 
         // Save the PDF
         const date = new Date().toISOString().split('T')[0];
-        doc.save(`nl-fnp-turnstile-export-${date}.pdf`);
+        let name = options.name || options.cardNumber || "all";
+        name = name.replace(/ /g, "-");
+        name = name.toLowerCase();
+        dateString = dateString.replace(/\//g, ".");
+        console.log("Date string: " + dateString);
+
+        doc.save(`nl-fnp-turnstile-export-${name}-${dateString}.pdf`);
 
     } catch (error) {
         console.error('Error exporting PDF:', error);
